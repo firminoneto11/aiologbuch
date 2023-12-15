@@ -3,15 +3,11 @@ import inspect
 import json
 import logging
 import sys
+import time
 import typing
 from datetime import datetime, timezone
 from functools import lru_cache
 from os import getenv
-
-if typing.TYPE_CHECKING:
-
-    class FileHandlerFormat(typing.TypedDict):
-        level: int
 
 
 @lru_cache(maxsize=None, typed=True)
@@ -44,9 +40,6 @@ class LogFilter:
 
 
 class JsonFormatter(logging.Formatter):
-    # TODO: Add milliseconds to the timestamp
-    # TODO: Add timezone info to the timestamp
-
     def converter(self, secs: float):
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
 
@@ -63,8 +56,20 @@ class JsonFormatter(logging.Formatter):
             "threadName": record.threadName,
             "message": record.getMessage(),
         }
-
         return json.dumps(log_data, indent=4)
+
+    def formatTime(
+        self, record: logging.LogRecord, datefmt: typing.Optional[str] = None
+    ):
+        if datefmt is None:
+            raise ValueError("datefmt not specified")
+
+        timestamp = time.strftime(datefmt, self.converter(record.created))
+
+        if self.default_msec_format:
+            timestamp = self.default_msec_format % (timestamp, record.msecs)
+
+        return timestamp
 
 
 class NLogger:
@@ -94,44 +99,45 @@ class NLogger:
         self._logger.addHandler(stderr_handler)
 
     def _get_formatter(self):
-        DEFAULT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+        # NOTE: The default date format is ISO 8601
+        DEFAULT_DATE_FORMAT = getenv("NLOGGING_DATE_FORMAT", "%Y-%m-%dT%H:%M:%S")
+        DEFAULT_MSEC_FORMAT = getenv("NLOGGING_MSEC_FORMAT", "%s.%03dZ")
 
-        formats = {
-            "datefmt": getenv("NLOGGING_DATE_FORMAT", DEFAULT_DATE_FORMAT),
-        }
+        formatter = JsonFormatter(datefmt=DEFAULT_DATE_FORMAT)
+        formatter.default_msec_format = DEFAULT_MSEC_FORMAT
 
-        return JsonFormatter(datefmt=formats["datefmt"])
+        return formatter
 
     # Async Logging
-    async def debug(self, message: str):
+    async def debug(self, message: str | dict):
         # TODO: Capture the previous stack
         previous_stack = inspect.stack()[1]  # noqa
         await asyncio.to_thread(self._logger.debug, message)
 
-    async def info(self, message: str):
+    async def info(self, message: str | dict):
         await asyncio.to_thread(self._logger.info, message)
 
-    async def warning(self, message: str):
+    async def warning(self, message: str | dict):
         await asyncio.to_thread(self._logger.warning, message)
 
-    async def error(self, message: str):
+    async def error(self, message: str | dict):
         await asyncio.to_thread(self._logger.error, message)
 
-    async def critical(self, message: str):
+    async def critical(self, message: str | dict):
         await asyncio.to_thread(self._logger.critical, message)
 
     # Sync Logging
-    def sDebug(self, message: str):
+    def sDebug(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sInfo(self, message: str):
+    def sInfo(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sWarning(self, message: str):
+    def sWarning(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sError(self, message: str):
+    def sError(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sCritical(self, message: str):
+    def sCritical(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)

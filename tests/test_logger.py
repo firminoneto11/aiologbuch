@@ -11,6 +11,7 @@ async def test_logger():
     # await logger.critical("this is a critical")
 
     logger.sDebug("sync logging")
+    logger.sDebug({"hey": "yo"})
 
 
 logger.sDebug("sync logging")
