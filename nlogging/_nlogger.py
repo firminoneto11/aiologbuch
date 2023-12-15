@@ -44,19 +44,24 @@ class JsonFormatter(logging.Formatter):
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
 
     def format(self, record: logging.LogRecord):
+        filename = record.__dict__.get("original_filename") or record.pathname
+        functionName = record.__dict__.get("original_function_name") or record.funcName
+        lineNumber = record.__dict__.get("original_line_number") or record.lineno
+
         log_data = {
             "timestamp": self.formatTime(record, self.datefmt),
             "level": record.levelname,
-            "filename": record.pathname,
-            "functionName": record.funcName,
-            "lineNumber": record.lineno,
-            "pid": record.process,
+            "filename": filename,
+            "functionName": functionName,
+            "lineNumber": lineNumber,
+            "processId": record.process,
             "processName": record.processName,
             "threadId": record.thread,
             "threadName": record.threadName,
             "message": record.getMessage(),
         }
-        return json.dumps(log_data, indent=4)
+
+        return json.dumps(log_data)
 
     def formatTime(
         self, record: logging.LogRecord, datefmt: typing.Optional[str] = None
@@ -99,7 +104,7 @@ class NLogger:
         self._logger.addHandler(stderr_handler)
 
     def _get_formatter(self):
-        # NOTE: The default date format is ISO 8601
+        # NOTE: The default datetime format is ISO 8601
         DEFAULT_DATE_FORMAT = getenv("NLOGGING_DATE_FORMAT", "%Y-%m-%dT%H:%M:%S")
         DEFAULT_MSEC_FORMAT = getenv("NLOGGING_MSEC_FORMAT", "%s.%03dZ")
 
@@ -108,36 +113,52 @@ class NLogger:
 
         return formatter
 
-    # Async Logging
-    async def debug(self, message: str | dict):
-        # TODO: Capture the previous stack
-        previous_stack = inspect.stack()[1]  # noqa
-        await asyncio.to_thread(self._logger.debug, message)
-
-    async def info(self, message: str | dict):
-        await asyncio.to_thread(self._logger.info, message)
-
-    async def warning(self, message: str | dict):
-        await asyncio.to_thread(self._logger.warning, message)
-
-    async def error(self, message: str | dict):
-        await asyncio.to_thread(self._logger.error, message)
-
-    async def critical(self, message: str | dict):
-        await asyncio.to_thread(self._logger.critical, message)
+    def _get_previous_stack_data(self):
+        previous_stack = inspect.stack()[2]
+        return {
+            "original_filename": previous_stack.filename,
+            "original_function_name": previous_stack.function,
+            "original_line_number": previous_stack.lineno,
+        }
 
     # Sync Logging
-    def sDebug(self, message: str | dict):
+    def debug(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sInfo(self, message: str | dict):
+    def info(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sWarning(self, message: str | dict):
+    def warning(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sError(self, message: str | dict):
+    def error(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
 
-    def sCritical(self, message: str | dict):
+    def critical(self, message: str | dict):
         self._logger.debug(message, stacklevel=2)
+
+    # Async Logging
+    async def aDebug(self, message: str | dict):
+        await asyncio.to_thread(
+            self._logger.debug, message, extra=self._get_previous_stack_data()
+        )
+
+    async def aInfo(self, message: str | dict):
+        await asyncio.to_thread(
+            self._logger.info, message, extra=self._get_previous_stack_data()
+        )
+
+    async def aWarning(self, message: str | dict):
+        await asyncio.to_thread(
+            self._logger.warning, message, extra=self._get_previous_stack_data()
+        )
+
+    async def aError(self, message: str | dict):
+        await asyncio.to_thread(
+            self._logger.error, message, extra=self._get_previous_stack_data()
+        )
+
+    async def aCritical(self, message: str | dict):
+        await asyncio.to_thread(
+            self._logger.critical, message, extra=self._get_previous_stack_data()
+        )
