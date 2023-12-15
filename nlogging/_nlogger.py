@@ -1,0 +1,137 @@
+import asyncio
+import inspect
+import json
+import logging
+import sys
+import typing
+from datetime import datetime, timezone
+from functools import lru_cache
+from os import getenv
+
+if typing.TYPE_CHECKING:
+
+    class FileHandlerFormat(typing.TypedDict):
+        level: int
+
+
+@lru_cache(maxsize=None, typed=True)
+def get_logger(
+    name: str,
+    level: typing.Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
+):
+    level_ = {
+        "INFO": logging.INFO,
+        "DEBUG": logging.DEBUG,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL,
+    }
+    return NLogger(name=name, level=level_[level])
+
+
+class LogFilter:
+    _level: int
+
+    def __init__(self, level: int):
+        self._level = level
+
+    @property
+    def level(self):
+        return self._level
+
+    def filter(self, record: logging.LogRecord):
+        return self.level == record.levelno
+
+
+class JsonFormatter(logging.Formatter):
+    # TODO: Add milliseconds to the timestamp
+    # TODO: Add timezone info to the timestamp
+
+    def converter(self, secs: float):
+        return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
+
+    def format(self, record: logging.LogRecord):
+        log_data = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "filename": record.pathname,
+            "functionName": record.funcName,
+            "lineNumber": record.lineno,
+            "pid": record.process,
+            "processName": record.processName,
+            "threadId": record.thread,
+            "threadName": record.threadName,
+            "message": record.getMessage(),
+        }
+
+        return json.dumps(log_data, indent=4)
+
+
+class NLogger:
+    _logger: logging.Logger
+
+    def __init__(self, name: str, level: int = logging.INFO):
+        fmt = self._get_formatter()
+
+        # TODO: Add support for file logging
+        # TODO: Add support for log rotation
+        # TODO: Add support for multiple file loggers
+
+        # for handler in handlers:
+        #     if handler.log_only_one_level:  # pragma: no cover
+        #         handler.file_handler.addFilter(filter=LogFilter(level=handler.level))
+
+        #     handler.file_handler.setLevel(level=handler.level)
+        #     handler.file_handler.setFormatter(fmt=fmt)
+        #     self._logger.addHandler(handler.file_handler)
+
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setLevel(level=level)
+        stderr_handler.setFormatter(fmt=fmt)
+
+        self._logger = logging.getLogger(name=name)
+        self._logger.setLevel(level=level)
+        self._logger.addHandler(stderr_handler)
+
+    def _get_formatter(self):
+        DEFAULT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+
+        formats = {
+            "datefmt": getenv("NLOGGING_DATE_FORMAT", DEFAULT_DATE_FORMAT),
+        }
+
+        return JsonFormatter(datefmt=formats["datefmt"])
+
+    # Async Logging
+    async def debug(self, message: str):
+        # TODO: Capture the previous stack
+        previous_stack = inspect.stack()[1]  # noqa
+        await asyncio.to_thread(self._logger.debug, message)
+
+    async def info(self, message: str):
+        await asyncio.to_thread(self._logger.info, message)
+
+    async def warning(self, message: str):
+        await asyncio.to_thread(self._logger.warning, message)
+
+    async def error(self, message: str):
+        await asyncio.to_thread(self._logger.error, message)
+
+    async def critical(self, message: str):
+        await asyncio.to_thread(self._logger.critical, message)
+
+    # Sync Logging
+    def sDebug(self, message: str):
+        self._logger.debug(message, stacklevel=2)
+
+    def sInfo(self, message: str):
+        self._logger.debug(message, stacklevel=2)
+
+    def sWarning(self, message: str):
+        self._logger.debug(message, stacklevel=2)
+
+    def sError(self, message: str):
+        self._logger.debug(message, stacklevel=2)
+
+    def sCritical(self, message: str):
+        self._logger.debug(message, stacklevel=2)
