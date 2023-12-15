@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "nlogging"
+version = "0.0.1"
+description = "A tiny logging tool for Python"
+authors = ["Firmino Neto <firminoneto@protonmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.*"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "0.1.*"
+pytest = "7.4.*"
+coverage = "7.3.*"
+pytest-sugar = "0.9.*"
+pytest-asyncio = "0.23.*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Ruff configs
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = ["E501"]
+
+# Pytest configs
+[tool.pytest.ini_options]
+addopts = "-s -v --durations=5"
+asyncio_mode = "auto"
+
+# Coverage configs
+[tool.coverage.run]
+omit = ["test/*", "*conftest.py", "venv/*"]
+data_file = ".coverage/coverage"
+branch = true
+
+[tool.coverage.report]
+skip_covered = true
+precision = 2
+fail_under = 80
+exclude_also = ["if TYPE_CHECKING:"]
+
+[tool.coverage.html]
+directory = ".coverage/html-report"
+skip_covered = true
