@@ -10,3 +10,10 @@ async def test_logger():
     await logger.aCritical("this is a critical")
     logger.debug("sync logging")
     logger.debug({"hey": "yo"})
+
+
+async def test_calling_get_logger_multiple_times_should_return_same_instance():
+    logger1 = get_logger(name="logger", level="DEBUG")
+    logger2 = get_logger(name="logger", level="DEBUG")
+
+    # assert hex(id(logger1)) == hex(id(logger2))

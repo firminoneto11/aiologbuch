@@ -8,7 +8,9 @@ with open("README.md") as f:
 setup(
     name="nlogging",
     version=__version__,
-    description="A tiny logging tool for Python",
+    description=(
+        "A tiny logging tool for Python, heavily opinionated, but very easy to use."
+    ),
     package_dir={"": "nlogging"},
     packages=find_packages(where="nlogging"),
     long_description=long_description,
@@ -21,9 +23,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.9",
     ],
     # install_requires=[],
     extras_require={"dev": ["pytest>=7.4.3", "ruff>=0.1.8", "twine>=4.0.2"]},

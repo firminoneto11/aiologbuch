@@ -1,20 +1,33 @@
 import asyncio
 import inspect
-import json
 import logging
 import sys
-import time
 import typing
-from datetime import datetime, timezone
-from functools import lru_cache
+from functools import lru_cache, wraps
 from os import getenv
 
+from .formatters import JsonFormatter
 
-@lru_cache(maxsize=None, typed=True)
+
+def wrapped_cache[**Spec, ReturnType](func: typing.Callable[Spec, ReturnType]):
+    @wraps(func)
+    def wrapper(*args: Spec.args, **kwargs: Spec.kwargs) -> ReturnType:
+        return lru_cache(maxsize=None, typed=True)(func)(*args, **kwargs)
+
+    return wrapper
+
+
+@wrapped_cache
 def get_logger(
     name: str,
     level: typing.Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
 ):
+    """
+    This function is used to get a logger instance.
+
+    :param name: The name of the logger.
+    :param level: The level of the logger. Default is INFO.
+    """
     level_ = {
         "INFO": logging.INFO,
         "DEBUG": logging.DEBUG,
@@ -25,79 +38,20 @@ def get_logger(
     return NLogger(name=name, level=level_[level])
 
 
-class LogFilter:
-    _level: int
-
-    def __init__(self, level: int):
-        self._level = level
-
-    @property
-    def level(self):
-        return self._level
-
-    def filter(self, record: logging.LogRecord):
-        return self.level == record.levelno
-
-
-class JsonFormatter(logging.Formatter):
-    def converter(self, secs: float):
-        return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
-
-    def format(self, record: logging.LogRecord):
-        filename = record.__dict__.get("original_filename") or record.pathname
-        functionName = record.__dict__.get("original_function_name") or record.funcName
-        lineNumber = record.__dict__.get("original_line_number") or record.lineno
-
-        log_data = {
-            "timestamp": self.formatTime(record, self.datefmt),
-            "level": record.levelname,
-            "filename": filename,
-            "functionName": functionName,
-            "lineNumber": lineNumber,
-            "processId": record.process,
-            "processName": record.processName,
-            "threadId": record.thread,
-            "threadName": record.threadName,
-            "message": record.getMessage(),
-        }
-
-        return json.dumps(log_data)
-
-    def formatTime(
-        self, record: logging.LogRecord, datefmt: typing.Optional[str] = None
-    ):
-        if datefmt is None:
-            raise ValueError("datefmt not specified")
-
-        timestamp = time.strftime(datefmt, self.converter(record.created))
-
-        if self.default_msec_format:
-            timestamp = self.default_msec_format % (timestamp, record.msecs)
-
-        return timestamp
-
-
 class NLogger:
     _logger: logging.Logger
 
     def __init__(self, name: str, level: int = logging.INFO):
         fmt = self._get_formatter()
 
-        # TODO: Add support for file logging
-        # TODO: Add support for log rotation
-        # TODO: Add support for multiple file loggers
-
-        # for handler in handlers:
-        #     if handler.log_only_one_level:  # pragma: no cover
-        #         handler.file_handler.addFilter(filter=LogFilter(level=handler.level))
-
-        #     handler.file_handler.setLevel(level=handler.level)
-        #     handler.file_handler.setFormatter(fmt=fmt)
-        #     self._logger.addHandler(handler.file_handler)
-
         stderr_handler = logging.StreamHandler(sys.stderr)
         stderr_handler.setLevel(level=level)
         stderr_handler.setFormatter(fmt=fmt)
+
+        # TODO: Fix wrapped_cache function: It's not caching
+        # TODO: Check if the logger is already created before setting stuff again,
+        # meaning, make this function idempotent
+        # logging.Logger.manager.getLogger
 
         self._logger = logging.getLogger(name=name)
         self._logger.setLevel(level=level)
