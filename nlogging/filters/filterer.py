@@ -1,4 +1,4 @@
-from logging import Filterer as LoggingFilterer
+from logging import Filterer as _Filterer
 from typing import TYPE_CHECKING
 
 from .filter import Filter
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from nlogging.records import LogRecord
 
 
-class Filterer(LoggingFilterer):
+class Filterer(_Filterer):
     if TYPE_CHECKING:
         filters: dict[str, Filter]
 

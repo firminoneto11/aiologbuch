@@ -48,15 +48,15 @@ if TYPE_CHECKING:
 
 class BaseNativeAsyncHandler(Filterer):
     def __init__(
-        self, level: int = LogLevel.NOTSET, formatter: Optional[Formatter] = None
+        self, level: int = LogLevel.NOTSET, formatter: Optional[type[Formatter]] = None
     ):
         Filterer.__init__(self)
-        self._name = None
+        # self._name = None
         self._level = check_level(level)
         self._closed = False
 
         if isinstance(formatter, Formatter):
-            raise TypeError("formatter must be an instance of Formatter")
+            raise TypeError("formatter must be an instance of Formatter subclass")
 
         self.formatter = formatter
 
@@ -72,9 +72,9 @@ class BaseNativeAsyncHandler(Filterer):
     def level(self, value: int | str):
         self._level = check_level(value)
 
-    @property
-    def name(self):
-        return self._name
+    # @property
+    # def name(self):
+    #     return self._name
 
     # @name.setter
     # def name(self, value: str):
@@ -88,6 +88,15 @@ class BaseNativeAsyncHandler(Filterer):
     #     finally:
     #         _releaseLock()
 
+    # async def close(self):
+    #     await _acquireLock()
+    #     try:
+    #         self._closed = True
+    #         if self._name and self._name in _handlers:
+    #             del _handlers[self._name]
+    #     finally:
+    #         _releaseLock()
+
     @abstractmethod
     async def emit(self, record: LogRecord):
         raise NotImplementedError("emit must be implemented by Handler subclasses")
@@ -96,46 +105,29 @@ class BaseNativeAsyncHandler(Filterer):
     async def flush(self):
         raise NotImplementedError("flush must be implemented by Handler subclasses")
 
-    def format(self, record):
+    @abstractmethod
+    async def close(self):
+        raise NotImplementedError("close must be implemented by Handler subclasses")
+
+    def format(self, record: LogRecord):
         if not self.formatter:
             raise TypeError("No formatter found")
         return self.formatter.format(record)
 
-    async def close(self):
-        self._closed = True
-        # await _acquireLock()
-        # try:
-        #     self._closed = True
-        #     if self._name and self._name in _handlers:
-        #         del _handlers[self._name]
-        # finally:
-        #     _releaseLock()
-
     async def handle(self, record: LogRecord):
         if rv := self.filter(record):
-            await self.lock.acquire()
-            try:
-                await self.emit(record)
-            finally:
-                self.lock.release()
+            await self.emit(record)
         return rv
 
-    async def handleError(self, record: LogRecord) -> None:
+    async def handleError(self, record: LogRecord):
         if raise_exceptions:
-            await self.lock.acquire()
-            try:
-                await asyncio.to_thread(Handler.handleError, None, record)
-            finally:
-                self.lock.release()
+            await asyncio.to_thread(Handler.handleError, None, record)
 
     def setFormatter(self, formatter: Formatter):
         self.formatter = formatter
 
     def createLock(self):
         self.lock = asyncio.Lock()
-
-    def _at_fork_reinit(self):
-        pass
 
     async def acquire(self):
         if self.lock:
@@ -147,3 +139,6 @@ class BaseNativeAsyncHandler(Filterer):
 
     def __repr__(self):
         return f"<{self.__class__.__name__} ({get_level_name(self.level)})>"
+
+    def _at_fork_reinit(self):
+        pass
