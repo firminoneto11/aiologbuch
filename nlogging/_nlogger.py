@@ -4,7 +4,6 @@ import logging
 import sys
 import typing
 from functools import lru_cache, wraps
-from os import getenv
 
 from .formatters import JsonFormatter
 
@@ -42,11 +41,9 @@ class NLogger:
     _logger: logging.Logger
 
     def __init__(self, name: str, level: int = logging.INFO):
-        fmt = self._get_formatter()
-
         stderr_handler = logging.StreamHandler(sys.stderr)
         stderr_handler.setLevel(level=level)
-        stderr_handler.setFormatter(fmt=fmt)
+        stderr_handler.setFormatter(fmt=JsonFormatter())
 
         # TODO: Fix wrapped_cache function: It's not caching
         # TODO: Check if the logger is already created before setting stuff again,
@@ -57,22 +54,12 @@ class NLogger:
         self._logger.setLevel(level=level)
         self._logger.addHandler(stderr_handler)
 
-    def _get_formatter(self):
-        # NOTE: The default datetime format is ISO 8601
-        DEFAULT_DATE_FORMAT = getenv("NLOGGING_DATE_FORMAT", "%Y-%m-%dT%H:%M:%S")
-        DEFAULT_MSEC_FORMAT = getenv("NLOGGING_MSEC_FORMAT", "%s.%03dZ")
-
-        formatter = JsonFormatter(datefmt=DEFAULT_DATE_FORMAT)
-        formatter.default_msec_format = DEFAULT_MSEC_FORMAT
-
-        return formatter
-
     def _get_previous_stack_data(self):
         previous_stack = inspect.stack()[2]
         return {
-            "original_filename": previous_stack.filename,
-            "original_function_name": previous_stack.function,
-            "original_line_number": previous_stack.lineno,
+            "caller_filename": previous_stack.filename,
+            "caller_function_name": previous_stack.function,
+            "caller_line_number": previous_stack.lineno,
         }
 
     # Sync Logging
