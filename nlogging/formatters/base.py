@@ -4,7 +4,7 @@ from time import strftime
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
-    from logging import LogRecord
+    from nlogging.records import LogRecord
 
     class CallerInfo(TypedDict):
         caller_filename: str
@@ -40,12 +40,12 @@ class BaseFormatter(Formatter):
     def _get_caller_info(self, record: "LogRecord") -> "CallerInfo":
         return {
             "caller_filename": (
-                record.__dict__.get("caller_filename") or record.pathname
+                record.extra_data.get("caller_filename") or record.pathname
             ),
             "caller_function_name": (
-                record.__dict__.get("caller_function_name") or record.funcName
+                record.extra_data.get("caller_function_name") or record.funcName
             ),
             "caller_line_number": (
-                record.__dict__.get("caller_line_number") or record.lineno
+                record.extra_data.get("caller_line_number") or record.lineno
             ),
         }

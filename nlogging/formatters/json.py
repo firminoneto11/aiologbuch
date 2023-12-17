@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base import BaseFormatter
 
 if TYPE_CHECKING:
-    from logging import LogRecord
+    from nlogging.records import LogRecord
 
 
 # NOTE: orjson is optional, but it's faster than json
@@ -20,13 +20,13 @@ class JsonFormatter(BaseFormatter):
         log_data = {
             "timestamp": self.formatTime(record),
             "level": record.levelname,
-            "filename": caller_info["caller_filename"],
-            "functionName": caller_info["caller_function_name"],
-            "lineNumber": caller_info["caller_line_number"],
             "processId": record.process,
             "processName": record.processName,
             "threadId": record.thread,
             "threadName": record.threadName,
+            "filename": caller_info["caller_filename"],
+            "functionName": caller_info["caller_function_name"],
+            "lineNumber": caller_info["caller_line_number"],
             "message": record.getMessage(),
         }
 
