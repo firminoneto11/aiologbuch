@@ -1,26 +1,26 @@
 from logging import Filterer as _Filterer
 from typing import TYPE_CHECKING
 
-from .filter import Filter
-
 if TYPE_CHECKING:
     from nlogging.records import LogRecord
+
+    from .filter import Filter
 
 
 class Filterer(_Filterer):
     if TYPE_CHECKING:
-        filters: dict[str, Filter]
+        filters: dict[str, "Filter"]
 
     def __init__(self):
         self.filters = dict()
 
-    def addFilter(self, filter: Filter):
+    def addFilter(self, filter: "Filter"):
         self._validate_filter(filter)
 
         if filter.id not in self.filters:
             self.filters[filter.id] = filter
 
-    def removeFilter(self, filter: Filter):
+    def removeFilter(self, filter: "Filter"):
         self._validate_filter(filter)
         self.filters.pop(filter.id, None)
 
@@ -30,6 +30,15 @@ class Filterer(_Filterer):
                 return False
         return True
 
-    def _validate_filter(self, filter: Filter):
-        if not isinstance(filter, Filter):
-            raise TypeError("filter must be an instance of Filter")
+    def _validate_filter(self, filter: "Filter"):
+        if not hasattr(filter, "id"):
+            raise TypeError("Filter must have an id attribute")
+
+        if not isinstance(filter.id, str):
+            raise TypeError("Filter id must be a string")
+
+        if not hasattr(filter, "filter"):
+            raise TypeError("Filter must have a filter method")
+
+        if not callable(filter.filter):
+            raise TypeError("Filter filter method must be callable")

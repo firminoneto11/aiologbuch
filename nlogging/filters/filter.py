@@ -16,4 +16,4 @@ class Filter(_Filter):
         return self._id
 
     def filter(self, record: "LogRecord"):
-        return self._level == record.levelno
+        return record.levelno >= self._level
