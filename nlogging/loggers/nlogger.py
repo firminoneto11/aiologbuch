@@ -2,29 +2,27 @@ import inspect
 import sys
 import typing
 
-# from asyncio import create_task
-from .filters import Filterer
-from .formatters import JsonFormatter
-from .handlers import NativeAsyncStreamHandler
-from .levels import LogLevel, check_level, get_level_name
-from .records import LogRecord
+from nlogging.filters import Filterer
+from nlogging.formatters import JsonFormatter
+from nlogging.handlers import AsyncStreamHandler
+from nlogging.levels import LogLevel, check_level, get_level_name
+from nlogging.records import LogRecord
+
+from .base import BaseLogger
 
 if typing.TYPE_CHECKING:
-    from nlogging.handlers import BaseNativeAsyncHandler
+    from nlogging.handlers import BaseAsyncHandler
 
 
-ROOT_LOGGER_NAME = "nlogger"
-
-
-class NLogger(Filterer):
+class NLogger(Filterer, BaseLogger):
     if typing.TYPE_CHECKING:
-        handlers: list["BaseNativeAsyncHandler"]
+        handlers: list["BaseAsyncHandler"]
 
     @classmethod
     def create_logger(cls, name: str, level: int):
         logger = cls(name, level)
 
-        stream_handler = NativeAsyncStreamHandler(stream=sys.stderr)
+        stream_handler = AsyncStreamHandler(stream=sys.stderr)
         stream_handler.setLevel(level)
         stream_handler.setFormatter(JsonFormatter())
 
@@ -34,12 +32,20 @@ class NLogger(Filterer):
     def __init__(self, name: str, level: int):
         Filterer.__init__(self)
         self.name = name
-        self.level = check_level(level)
+        self._level = check_level(level)
         self.handlers = []
         self.disabled = False
 
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value: str | int):
+        self._level = check_level(value)
+
     def setLevel(self, level: str | int):
-        self.level = check_level(level)
+        self.level = level
 
     async def debug(self, msg: dict | str):
         if self.isEnabledFor(LogLevel.DEBUG):
@@ -64,6 +70,24 @@ class NLogger(Filterer):
     async def critical(self, msg: dict | str):
         if self.isEnabledFor(LogLevel.CRITICAL):
             await self._log(LogLevel.CRITICAL, msg)
+
+    def findCaller(self, stack_info: bool = False, stacklevel: int = 1):
+        ...
+
+    def makeRecord(
+        self,
+        name: str,
+        level: int,
+        fn: str,
+        lno: int,
+        msg: str | dict,
+        args: tuple,
+        exc_info: bool,
+        func=None,
+        extra: dict | None = None,
+        sinfo=None,
+    ):
+        ...
 
     async def _log(
         self,
@@ -104,11 +128,11 @@ class NLogger(Filterer):
         if (not self.disabled) and self.filter(record):
             await self.callHandlers(record)
 
-    def addHandler(self, handler: "BaseNativeAsyncHandler"):
+    def addHandler(self, handler: "BaseAsyncHandler"):
         if handler not in self.handlers:
             self.handlers.append(handler)
 
-    def removeHandler(self, handler: "BaseNativeAsyncHandler"):
+    def removeHandler(self, handler: "BaseAsyncHandler"):
         if handler in self.handlers:
             self.handlers.remove(handler)
 
@@ -135,37 +159,5 @@ class NLogger(Filterer):
     async def disable(self):
         if self.disabled:
             return
-        await self._do_disable()
-        self.disabled = True
-
-    async def _do_disable(self):
         [await handler.close() for handler in self.handlers]
-
-
-_active_loggers: dict[str, NLogger] = {
-    ROOT_LOGGER_NAME: NLogger.create_logger(ROOT_LOGGER_NAME, LogLevel.INFO),
-}
-
-
-def get_logger(
-    name: str = ROOT_LOGGER_NAME,
-    level: typing.Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
-):
-    """
-    This function is used to get a logger instance.
-
-    :param name: The name of the logger. Default is nlogger, which is the root.
-    :param level: The level of the logger. Default is INFO.
-    """
-    level_ = check_level(level)
-
-    if name not in _active_loggers:
-        _active_loggers[name] = NLogger.create_logger(name=name, level=level_)
-
-    logger = _active_loggers[name]
-
-    if logger.level != level_:
-        # TODO: Update the filter's level too
-        logger.setLevel(level_)
-
-    return logger
+        self.disabled = True
