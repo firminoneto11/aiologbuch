@@ -1,6 +1,4 @@
 import asyncio
-import sys
-from types import GenericAlias
 from typing import TYPE_CHECKING, Optional, TextIO
 
 from nlogging.levels import get_level_name
@@ -15,15 +13,11 @@ from .base import BaseNativeAsyncHandler
 class NativeAsyncStreamHandler(BaseNativeAsyncHandler):
     if TYPE_CHECKING:
         writer: Optional[asyncio.StreamWriter]
-        stream: TextIO
 
     terminator = "\n"
 
-    def __init__(self, stream: Optional[TextIO] = None):
+    def __init__(self, stream: TextIO):
         BaseNativeAsyncHandler.__init__(self)
-        if stream is None:
-            stream = sys.stderr
-
         self.stream = stream
         self.writer = None
 
@@ -104,5 +98,3 @@ class NativeAsyncStreamHandler(BaseNativeAsyncHandler):
         if name := str(getattr(self.stream, "name", "")):
             name += " "
         return f"<{self.__class__.__name__} {name}({level})>"
-
-    __class_getitem__ = classmethod(GenericAlias)
