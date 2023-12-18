@@ -16,7 +16,7 @@ NAME_TO_LEVEL = {level: LogLevel[level].value for level in LogLevel.__members__}
 LEVEL_TO_NAME = {level.value: level.name for level in LogLevel}
 
 
-def get_level_name(level: int) -> str:
+def get_level_name(level: int):
     try:
         return LEVEL_TO_NAME[level]
     except KeyError as exc:
