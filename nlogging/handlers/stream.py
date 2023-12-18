@@ -7,17 +7,17 @@ from nlogging.protocols import AIOProtocol
 if TYPE_CHECKING:
     from nlogging.records import LogRecord
 
-from .base import BaseNativeAsyncHandler
+from .base import BaseAsyncHandler
 
 
-class NativeAsyncStreamHandler(BaseNativeAsyncHandler):
+class AsyncStreamHandler(BaseAsyncHandler):
     if TYPE_CHECKING:
         writer: Optional[asyncio.StreamWriter]
 
     terminator = "\n"
 
     def __init__(self, stream: TextIO):
-        BaseNativeAsyncHandler.__init__(self)
+        BaseAsyncHandler.__init__(self)
         self.stream = stream
         self.writer = None
 

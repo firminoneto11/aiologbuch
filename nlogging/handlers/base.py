@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from nlogging.records import LogRecord
 
 
-class BaseNativeAsyncHandler(Filterer):
+class BaseAsyncHandler(Filterer):
     def __init__(self):
         Filterer.__init__(self)
         self._level = LogLevel.NOTSET
