@@ -1,4 +1,4 @@
-def is_direct_subclass[T: object, I: object](cls_or_instance: type[T] | T, base_cls: I):
+def is_direct_subclass[T: object, I: object](cls_or_instance: T, base_cls: I):
     subclasses = [el.__name__ for el in base_cls.__class__.__subclasses__()]
 
     # If 'cls_or_instance' is a class, check if it's in subclasses
