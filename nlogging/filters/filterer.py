@@ -1,4 +1,3 @@
-from logging import Filterer as _Filterer
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -7,20 +6,20 @@ if TYPE_CHECKING:
     from .filter import Filter
 
 
-class Filterer(_Filterer):
+class Filterer:
     if TYPE_CHECKING:
         filters: dict[str, "Filter"]
 
     def __init__(self):
         self.filters = dict()
 
-    def addFilter(self, filter: "Filter"):
+    def add_filter(self, filter: "Filter"):
         self._validate_filter(filter)
 
         if filter.id not in self.filters:
             self.filters[filter.id] = filter
 
-    def removeFilter(self, filter: "Filter"):
+    def remove_filter(self, filter: "Filter"):
         self._validate_filter(filter)
         self.filters.pop(filter.id, None)
 
@@ -34,11 +33,5 @@ class Filterer(_Filterer):
         if not hasattr(filter, "id"):
             raise TypeError("Filter must have an id attribute")
 
-        if not isinstance(filter.id, str):
-            raise TypeError("Filter id must be a string")
-
         if not hasattr(filter, "filter"):
             raise TypeError("Filter must have a filter method")
-
-        if not callable(filter.filter):
-            raise TypeError("Filter filter method must be callable")
