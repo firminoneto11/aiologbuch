@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
 from nlogging.formatters import BaseFormatter
-from nlogging.levels import LogLevel, check_level, get_level_name
+from nlogging.levels import LogLevel, check_level
 from nlogging.settings import RAISE_EXCEPTIONS
 from nlogging.utils import is_direct_subclass
 
@@ -19,8 +19,7 @@ class BaseAsyncHandler(Filterer):
         Filterer.__init__(self)
         self._level = LogLevel.NOTSET
         self._formatter = None
-        self._closed = False
-        self.create_lock()
+        self._lock = Lock()
 
     @property
     def level(self) -> int:
@@ -39,6 +38,10 @@ class BaseAsyncHandler(Filterer):
         if not is_direct_subclass(cls_or_instance=value, base_cls=BaseFormatter):
             raise TypeError("'formatter' must be a subclass of BaseFormatter")
         self._formatter = value
+
+    @property
+    def lock(self):
+        return self._lock
 
     async def emit(self, record: "LogRecord"):
         raise NotImplementedError("emit must be implemented by Handler subclasses")
@@ -63,19 +66,8 @@ class BaseAsyncHandler(Filterer):
         if RAISE_EXCEPTIONS:
             await to_thread(Handler.handleError, None, record)
 
-    def create_lock(self):
-        self.lock = Lock()
-
     async def acquire(self):
-        if self.lock:
-            await self.lock.acquire()
+        await self.lock.acquire()
 
     def release(self):
-        if self.lock:
-            self.lock.release()
-
-    def __repr__(self):
-        return f"<{self.__class__.__name__} ({get_level_name(self.level)})>"
-
-    def _at_fork_reinit(self):
-        pass
+        self.lock.release()
