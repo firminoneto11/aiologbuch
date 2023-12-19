@@ -1,7 +1,6 @@
-import asyncio
+from asyncio import StreamWriter, get_running_loop
 from typing import TYPE_CHECKING, Optional, TextIO
 
-from nlogging.levels import get_level_name
 from nlogging.protocols import AIOProtocol
 
 if TYPE_CHECKING:
@@ -11,90 +10,80 @@ from .base import BaseAsyncHandler
 
 
 class AsyncStreamHandler(BaseAsyncHandler):
-    if TYPE_CHECKING:
-        writer: Optional[asyncio.StreamWriter]
+    _writer: Optional[StreamWriter]
 
     terminator = "\n"
 
     def __init__(self, stream: TextIO):
         BaseAsyncHandler.__init__(self)
-        self.stream = stream
-        self.writer = None
+        self._writer = None
+        self._closed = False
+        self._stream = stream
 
-    async def write(self, msg: str):
-        if not self.writer:
-            self.writer = await self._init_writer()
-        self.writer.write(msg.encode())
+    @property
+    def writer(self):
+        return self._writer
 
-    async def emit(self, record: "LogRecord"):
-        try:
-            msg = self.format(record) + self.terminator
-            await self.write(msg)
-            await self.flush()
-        except:  # noqa
-            await self.handleError(record)
+    @property
+    def closed(self):
+        return self._closed
+
+    @property
+    def stream(self):
+        return self._stream
+
+    @stream.setter
+    def stream(self, value: TextIO):
+        if value is self.stream:
+            return
+
+        if (self.writer) and (not self.closed):
+            raise ValueError("Cannot change stream on open handler")
+
+        self._writer = None
+        self._stream = value
 
     async def flush(self):
         if self.writer:
             await self.writer.drain()
 
+    async def emit(self, record: "LogRecord"):
+        try:
+            msg = self.format(record) + self.terminator
+            await self.write_and_flush(msg)
+        except:  # noqa
+            await self.handle_error(record)
+
+    async def write_and_flush(self, msg: str):
+        if (not self.writer) or (self.closed):
+            self.writer = await self._init_writer()
+        self.writer.write(msg.encode())
+        await self.flush()
+
     async def close(self):
-        if self.writer:
+        if (self.writer) and (not self.closed):
             await self.acquire()
             try:
                 await self.flush()
                 self.writer.close()
+                await self.writer.wait_closed()
                 self._closed = True
             finally:
                 self.release()
 
-    async def setStream(self, stream: TextIO):
-        """
-        Sets the StreamHandler's stream to the specified value,
-        if it is different.
-
-        Returns the old stream, if the stream was changed, or None
-        if it wasn't.
-
-        If the 'write' property is set, raises ValueError, because the
-        handler would keep writing to the old stream, which is probably not
-        what was intended.
-        """
-        if stream is self.stream:
-            result = None
-        else:
-            if self.writer:
-                raise ValueError("Cannot change stream on open handler")
-
-            result = self.stream
-
-            await self.acquire()
-            try:
-                await self.flush()
-                self.stream = stream
-            finally:
-                self.release()
-
-        return result
-
     async def _init_writer(self):
-        if self.writer:
+        if (self.writer) and (not self.closed):
             return self.writer
+
+        loop = get_running_loop()
 
         await self.acquire()
         try:
-            loop = asyncio.get_running_loop()
             transport, protocol = await loop.connect_write_pipe(
                 AIOProtocol, self.stream
             )
-            return asyncio.StreamWriter(
+            return StreamWriter(
                 transport=transport, protocol=protocol, reader=None, loop=loop
             )
         finally:
             self.release()
-
-    def __repr__(self):
-        level = get_level_name(self.level)
-        if name := str(getattr(self.stream, "name", "")):
-            name += " "
-        return f"<{self.__class__.__name__} {name}({level})>"
