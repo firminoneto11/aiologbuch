@@ -8,6 +8,6 @@ def _parse_bool(value: str):
     return val == "true"
 
 
-raise_exceptions = _parse_bool(getenv("NLOGGING_RAISE_EXCEPTIONS", "true"))
+RAISE_EXCEPTIONS = _parse_bool(getenv("NLOGGING_RAISE_EXCEPTIONS", "true"))
 
 ROOT_LOGGER_NAME = "nlogger"
