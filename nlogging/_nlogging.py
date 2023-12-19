@@ -12,7 +12,7 @@ def get_logger(
     """
     This function is used to get a logger instance.
 
-    :param name: The name of the logger. Default is nlogger, which is the root.
+    :param name: The name of the logger. Default is nlogger, which is the root logger.
     :param level: The level of the logger. Default is INFO.
     """
     manager = LoggerManagerSingleton[NLogger](logger_class=NLogger)
