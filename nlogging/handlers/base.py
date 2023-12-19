@@ -1,40 +1,51 @@
-import asyncio
-from abc import abstractmethod
+from asyncio import Lock, to_thread
 from logging import Handler
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
-from nlogging.formatters import Formatter
+from nlogging.formatters import BaseFormatter
 from nlogging.levels import LogLevel, check_level, get_level_name
-from nlogging.settings import raise_exceptions
+from nlogging.settings import RAISE_EXCEPTIONS
+from nlogging.utils import is_direct_subclass
 
 if TYPE_CHECKING:
     from nlogging.records import LogRecord
 
 
 class BaseAsyncHandler(Filterer):
+    _formatter: Optional[BaseFormatter]
+
     def __init__(self):
         Filterer.__init__(self)
         self._level = LogLevel.NOTSET
+        self._formatter = None
         self._closed = False
-        self.createLock()
+        self.create_lock()
 
     @property
-    def level(self):
+    def level(self) -> int:
         return self._level
 
-    def setLevel(self, level: str | int):
-        self._level = check_level(level)
+    @level.setter
+    def level(self, value: str | int):
+        self._level = check_level(value)
 
-    @abstractmethod
+    @property
+    def formatter(self):
+        return self._formatter
+
+    @formatter.setter
+    def formatter(self, value: BaseFormatter):
+        if not is_direct_subclass(cls_or_instance=value, base_cls=BaseFormatter):
+            raise TypeError("'formatter' must be a subclass of BaseFormatter")
+        self._formatter = value
+
     async def emit(self, record: "LogRecord"):
         raise NotImplementedError("emit must be implemented by Handler subclasses")
 
-    @abstractmethod
     async def flush(self):
         raise NotImplementedError("flush must be implemented by Handler subclasses")
 
-    @abstractmethod
     async def close(self):
         raise NotImplementedError("close must be implemented by Handler subclasses")
 
@@ -48,17 +59,12 @@ class BaseAsyncHandler(Filterer):
             await self.emit(record)
         return rv
 
-    async def handleError(self, record: "LogRecord"):
-        if raise_exceptions:
-            await asyncio.to_thread(Handler.handleError, None, record)
+    async def handle_error(self, record: "LogRecord"):
+        if RAISE_EXCEPTIONS:
+            await to_thread(Handler.handleError, None, record)
 
-    def setFormatter(self, formatter: Formatter):
-        if formatter.__class__ is Formatter:
-            raise TypeError("formatter must be an instance of a Formatter subclass")
-        self.formatter = formatter
-
-    def createLock(self):
-        self.lock = asyncio.Lock()
+    def create_lock(self):
+        self.lock = Lock()
 
     async def acquire(self):
         if self.lock:
