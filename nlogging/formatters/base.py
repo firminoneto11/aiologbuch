@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from logging import Formatter
 from time import strftime
 from typing import TYPE_CHECKING, TypedDict
 
@@ -12,7 +11,7 @@ if TYPE_CHECKING:
         caller_line_number: int
 
 
-class BaseFormatter(Formatter):
+class BaseFormatter:
     # NOTE: The default datetime format follows ISO 8601
     DEFAULT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
     DEFAULT_MSEC_FORMAT = "%s.%03dZ"
@@ -20,10 +19,10 @@ class BaseFormatter(Formatter):
     def converter(self, secs: float):
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
 
-    def format(self, record: "LogRecord"):
+    def format(self, record: "LogRecord") -> str:
         raise NotImplementedError("format() must be implemented in subclass")
 
-    def formatTime(self, record: "LogRecord"):
+    def format_time(self, record: "LogRecord"):
         timestamp = strftime(self.DEFAULT_DATE_FORMAT, self.converter(record.created))
         return self.DEFAULT_MSEC_FORMAT % (timestamp, record.msecs)
 

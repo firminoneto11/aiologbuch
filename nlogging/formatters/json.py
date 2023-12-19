@@ -18,15 +18,15 @@ class JsonFormatter(BaseFormatter):
         caller_info = self._get_caller_info(record)
 
         log_data = {
-            "timestamp": self.formatTime(record),
+            "timestamp": self.format_time(record),
             "level": record.levelname,
-            "processId": record.process,
-            "processName": record.processName,
-            "threadId": record.thread,
-            "threadName": record.threadName,
+            "process_id": record.process,
+            "process_name": record.processName,
+            "thread_id": record.thread,
+            "thread_name": record.threadName,
             "filename": caller_info["caller_filename"],
-            "functionName": caller_info["caller_function_name"],
-            "lineNumber": caller_info["caller_line_number"],
+            "function_name": caller_info["caller_function_name"],
+            "line_number": caller_info["caller_line_number"],
             "message": record.getMessage(),
         }
 
