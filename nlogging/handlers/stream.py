@@ -16,17 +16,17 @@ class AsyncStreamHandler(BaseAsyncHandler):
 
     def __init__(self, stream: TextIO):
         BaseAsyncHandler.__init__(self)
+        self._closed = True
         self._writer = None
-        self._closed = False
         self._stream = stream
-
-    @property
-    def writer(self):
-        return self._writer
 
     @property
     def closed(self):
         return self._closed
+
+    @property
+    def writer(self):
+        return self._writer
 
     @property
     def stream(self):
@@ -34,13 +34,12 @@ class AsyncStreamHandler(BaseAsyncHandler):
 
     @stream.setter
     def stream(self, value: TextIO):
+        if not self.closed:
+            raise ValueError("Cannot change stream on open handler")
+
         if value is self.stream:
             return
 
-        if (self.writer) and (not self.closed):
-            raise ValueError("Cannot change stream on open handler")
-
-        self._writer = None
         self._stream = value
 
     async def flush(self):
@@ -57,6 +56,7 @@ class AsyncStreamHandler(BaseAsyncHandler):
     async def write_and_flush(self, msg: str):
         if (not self.writer) or (self.closed):
             self.writer = await self._init_writer()
+            self._closed = False
         self.writer.write(msg.encode())
         await self.flush()
 
@@ -67,9 +67,11 @@ class AsyncStreamHandler(BaseAsyncHandler):
                 await self.flush()
                 self.writer.close()
                 await self.writer.wait_closed()
-                self._closed = True
             finally:
                 self.release()
+
+            self._closed = True
+            self._writer = None
 
     async def _init_writer(self):
         if (self.writer) and (not self.closed):

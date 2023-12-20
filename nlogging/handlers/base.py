@@ -43,13 +43,13 @@ class BaseAsyncHandler(Filterer):
     def lock(self):
         return self._lock
 
-    async def emit(self, record: "LogRecord"):
+    async def emit(self, record: "LogRecord") -> None:
         raise NotImplementedError("emit must be implemented by Handler subclasses")
 
-    async def flush(self):
+    async def flush(self) -> None:
         raise NotImplementedError("flush must be implemented by Handler subclasses")
 
-    async def close(self):
+    async def close(self) -> None:
         raise NotImplementedError("close must be implemented by Handler subclasses")
 
     def format(self, record: "LogRecord"):

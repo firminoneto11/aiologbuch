@@ -1,35 +1,37 @@
-import inspect
-import sys
-import typing
+from inspect import stack
+from sys import exc_info as get_exc_info
+from sys import stderr
+from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
 from nlogging.formatters import JsonFormatter
 from nlogging.handlers import AsyncStreamHandler
-from nlogging.levels import LogLevel, check_level, get_level_name
+from nlogging.levels import LogLevel, check_level
 from nlogging.records import LogRecord
 
 from .base import BaseLogger
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from nlogging.handlers import BaseAsyncHandler
+
+    from .base import CallerInfo, MessageType
 
 
 class NLogger(Filterer, BaseLogger):
-    if typing.TYPE_CHECKING:
-        handlers: list["BaseAsyncHandler"]
+    handlers: list["BaseAsyncHandler"]
 
     @classmethod
-    def create_logger(cls, name: str, level: int):
+    def create_logger(cls, name: str, level: int | str):
+        stream_handler = AsyncStreamHandler(stream=stderr)
+        stream_handler.level = level
+        stream_handler.formatter = JsonFormatter()
+
         logger = cls(name, level)
+        logger.add_handler(stream_handler)
 
-        stream_handler = AsyncStreamHandler(stream=sys.stderr)
-        stream_handler.setLevel(level)
-        stream_handler.setFormatter(JsonFormatter())
-
-        logger.addHandler(stream_handler)
         return logger
 
-    def __init__(self, name: str, level: int):
+    def __init__(self, name: str, level: int | str):
         Filterer.__init__(self)
         self.name = name
         self._level = check_level(level)
@@ -44,117 +46,110 @@ class NLogger(Filterer, BaseLogger):
     def level(self, value: str | int):
         self._level = check_level(value)
 
-    def setLevel(self, level: str | int):
-        self.level = level
-
-    async def debug(self, msg: dict | str):
-        if self.isEnabledFor(LogLevel.DEBUG):
+    async def debug(self, msg: "MessageType"):
+        if self.is_enabled_for(LogLevel.DEBUG):
             await self._log(LogLevel.DEBUG, msg)
 
-    async def info(self, msg: dict | str):
-        if self.isEnabledFor(LogLevel.INFO):
+    async def info(self, msg: "MessageType"):
+        if self.is_enabled_for(LogLevel.INFO):
             await self._log(LogLevel.INFO, msg)
 
-    async def warning(self, msg: dict | str):
-        if self.isEnabledFor(LogLevel.WARNING):
+    async def warning(self, msg: "MessageType"):
+        if self.is_enabled_for(LogLevel.WARNING):
             await self._log(LogLevel.WARNING, msg)
 
-    async def error(self, msg: dict | str):
-        if self.isEnabledFor(LogLevel.ERROR):
+    async def error(self, msg: "MessageType"):
+        if self.is_enabled_for(LogLevel.ERROR):
             await self._log(LogLevel.ERROR, msg)
 
-    async def exception(self, msg: dict | str):
-        if self.isEnabledFor(LogLevel.ERROR):
+    async def exception(self, msg: "MessageType"):
+        if self.is_enabled_for(LogLevel.ERROR):
             await self._log(LogLevel.ERROR, msg, exc_info=True)
 
-    async def critical(self, msg: dict | str):
-        if self.isEnabledFor(LogLevel.CRITICAL):
+    async def critical(self, msg: "MessageType"):
+        if self.is_enabled_for(LogLevel.CRITICAL):
             await self._log(LogLevel.CRITICAL, msg)
 
-    def findCaller(self, stack_info: bool = False, stacklevel: int = 1):
-        ...
+    def find_caller(self) -> "CallerInfo":
+        frame = stack()[3]  # Up 3 frames from this one is the original caller
+        return {
+            "caller_filename": frame.filename,
+            "caller_function_name": frame.function,
+            "caller_line_number": frame.lineno,
+        }
 
-    def makeRecord(
+    def make_record(
         self,
         name: str,
+        msg: "MessageType",
         level: int,
-        fn: str,
-        lno: int,
-        msg: str | dict,
-        args: tuple,
-        exc_info: bool,
-        func=None,
-        extra: dict | None = None,
-        sinfo=None,
+        filename: str,
+        function_name: str,
+        line_number: int,
+        exc_info,
+        extra: Optional[dict] = None,
     ):
-        ...
+        return LogRecord(
+            name=name,
+            msg=msg,
+            level=level,
+            pathname=filename,
+            func=function_name,
+            lno=line_number,
+            exc_info=exc_info,
+            extra=extra,
+            args=tuple(),
+        )
 
     async def _log(
         self,
-        level,
-        msg,
-        args=None,
-        exc_info=None,
-        extra: typing.Optional[dict] = None,
+        level: int,
+        msg: "MessageType",
+        exc_info: bool = False,
+        extra: Optional[dict] = None,
     ):
-        frame = inspect.stack()[2]
-        fn, lno, func, sinfo = frame.filename, frame.lineno, frame.function, None
+        caller = self.find_caller()
 
-        if exc_info:
-            if isinstance(exc_info, BaseException):
-                exc_info = (type(exc_info), exc_info, exc_info.__traceback__)
-            elif not isinstance(exc_info, tuple):
-                exc_info = sys.exc_info()
-
-        if args is None:
-            args = ()
-
-        record = LogRecord(
-            self.name,
-            level,
-            fn,
-            lno,
-            msg,
-            args,
-            exc_info,
-            func,
-            sinfo,
-            extra_data=extra,
+        record = self.make_record(
+            name=self.name,
+            msg=msg,
+            level=level,
+            filename=caller["caller_filename"],
+            function_name=caller["caller_function_name"],
+            line_number=caller["caller_line_number"],
+            exc_info=get_exc_info() if exc_info else None,
+            extra=extra,
         )
 
         await self.handle(record)
 
     async def handle(self, record: LogRecord):
         if (not self.disabled) and self.filter(record):
-            await self.callHandlers(record)
+            await self.call_handlers(record)
 
-    def addHandler(self, handler: "BaseAsyncHandler"):
+    def add_handler(self, handler: "BaseAsyncHandler"):
         if handler not in self.handlers:
             self.handlers.append(handler)
 
-    def removeHandler(self, handler: "BaseAsyncHandler"):
+    def remove_handler(self, handler: "BaseAsyncHandler"):
         if handler in self.handlers:
             self.handlers.remove(handler)
 
-    def hasHandlers(self):
+    def has_handlers(self):
         return len(self.handlers) > 0
 
-    async def callHandlers(self, record: LogRecord):
-        if not self.hasHandlers():
+    async def call_handlers(self, record: LogRecord):
+        if not self.has_handlers():
             raise ValueError("No handlers found for logger")
 
         for handler in self.handlers:
             if record.levelno >= handler.level:
                 await handler.handle(record)
 
-    def isEnabledFor(self, level: int):
+    def is_enabled_for(self, level: int):
         if self.disabled:
             return False
         return level >= self.level
-
-    def __repr__(self):
-        level = get_level_name(self.level)
-        return f"<{self.__class__.__name__} {self.name} ({level})>"
 
     async def disable(self):
         if self.disabled:
