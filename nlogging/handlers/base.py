@@ -9,7 +9,7 @@ from nlogging.settings import RAISE_EXCEPTIONS
 from nlogging.utils import is_direct_subclass
 
 if TYPE_CHECKING:
-    from nlogging.records import LogRecord
+    from logging import LogRecord
 
 
 def _handler_id_generator():

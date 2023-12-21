@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from nlogging.records import LogRecord
+    from logging import LogRecord
 
     from .filter import Filter
 

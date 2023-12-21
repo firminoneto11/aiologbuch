@@ -1,4 +1,5 @@
 from inspect import stack
+from logging import LogRecord
 from sys import exc_info as get_exc_info
 from sys import stderr
 from typing import TYPE_CHECKING, Optional
@@ -7,7 +8,6 @@ from nlogging.filters import Filterer
 from nlogging.formatters import JsonFormatter
 from nlogging.handlers import AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
-from nlogging.records import LogRecord
 
 from .base import BaseLogger
 
@@ -91,18 +91,9 @@ class NLogger(Filterer, BaseLogger):
         function_name: str,
         line_number: int,
         exc_info: Optional["OptExcInfo"],
-        extra: Optional[dict],
     ):
         return LogRecord(
-            name=name,
-            msg=msg,
-            level=level,
-            pathname=filename,
-            func=function_name,
-            lno=line_number,
-            exc_info=exc_info,
-            extra=extra,
-            args=tuple(),
+            name, level, filename, line_number, msg, None, exc_info, function_name
         )
 
     async def _log(
@@ -110,7 +101,6 @@ class NLogger(Filterer, BaseLogger):
         level: int,
         msg: "MessageType",
         exc_info: bool = False,
-        extra: Optional[dict] = None,
     ):
         caller = self.find_caller()
 
@@ -122,7 +112,6 @@ class NLogger(Filterer, BaseLogger):
             function_name=caller["caller_function_name"],
             line_number=caller["caller_line_number"],
             exc_info=get_exc_info() if exc_info else None,
-            extra=extra,
         )
 
         await self.handle(record)
