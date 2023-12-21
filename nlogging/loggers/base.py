@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, Self, TypedDict
 
 if TYPE_CHECKING:
+    from logging import LogRecord
+
     from _typeshed import OptExcInfo
 
     from nlogging.handlers import BaseAsyncHandler
-    from nlogging.records import LogRecord
 
     class CallerInfo(TypedDict):
         caller_filename: str
@@ -80,7 +81,6 @@ class BaseLogger(ABC):
         function_name: str,
         line_number: int,
         exc_info: Optional["OptExcInfo"],
-        extra: Optional[dict],
     ) -> "LogRecord":
         raise NotImplementedError
 
@@ -90,7 +90,6 @@ class BaseLogger(ABC):
         level: int,
         msg: "MessageType",
         exc_info: bool = False,
-        extra: Optional[dict] = None,
     ) -> None:
         raise NotImplementedError
 

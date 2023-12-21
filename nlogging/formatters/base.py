@@ -3,7 +3,7 @@ from time import strftime
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
-    from nlogging.records import LogRecord
+    from logging import LogRecord
 
     class CallerInfo(TypedDict):
         caller_filename: str
@@ -35,16 +35,3 @@ class BaseFormatter:
         raise TypeError(
             f"Serialized object must be of str or bytes type, not {type(log)}"
         )
-
-    def _get_caller_info(self, record: "LogRecord") -> "CallerInfo":
-        return {
-            "caller_filename": (
-                record.extra_data.get("caller_filename") or record.pathname
-            ),
-            "caller_function_name": (
-                record.extra_data.get("caller_function_name") or record.funcName
-            ),
-            "caller_line_number": (
-                record.extra_data.get("caller_line_number") or record.lineno
-            ),
-        }
