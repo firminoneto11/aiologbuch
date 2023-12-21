@@ -12,6 +12,13 @@ if TYPE_CHECKING:
     from nlogging.records import LogRecord
 
 
+def _handler_id_generator():
+    i = 1
+    while True:
+        yield str(i)
+        i += 1
+
+
 class BaseAsyncHandler(Filterer):
     _formatter: Optional[BaseFormatter]
 
@@ -20,6 +27,7 @@ class BaseAsyncHandler(Filterer):
         self._level = LogLevel.NOTSET
         self._formatter = None
         self._lock = Lock()
+        self._id = next(_handler_id_generator())
 
     @property
     def level(self) -> int:
@@ -42,6 +50,10 @@ class BaseAsyncHandler(Filterer):
     @property
     def lock(self):
         return self._lock
+
+    @property
+    def id(self):
+        return self._id
 
     async def emit(self, record: "LogRecord") -> None:
         raise NotImplementedError("emit must be implemented by Handler subclasses")
