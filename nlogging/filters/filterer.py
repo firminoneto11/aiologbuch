@@ -14,7 +14,7 @@ class Filterer:
         self.filters = dict()
 
     def add_filter(self, filter: "Filter"):
-        self._validate_filter(filter)
+        self._validate_filter(filter=filter, adding=True)
 
         if filter.id not in self.filters:
             self.filters[filter.id] = filter
@@ -29,9 +29,9 @@ class Filterer:
                 return False
         return True
 
-    def _validate_filter(self, filter: "Filter"):
+    def _validate_filter(self, filter: "Filter", adding: bool = False):
         if not hasattr(filter, "id"):
             raise TypeError("Filter must have an id attribute")
 
-        if not hasattr(filter, "filter"):
+        if (adding) and (not hasattr(filter, "filter")):
             raise TypeError("Filter must have a filter method")
