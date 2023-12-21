@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class BaseLogger(ABC):
+    _handlers: dict[str, "BaseAsyncHandler"]
+
     @classmethod
     @abstractmethod
     def create_logger(cls, name: str, level: int | str) -> Self:
@@ -31,6 +33,11 @@ class BaseLogger(ABC):
     @level.setter
     @abstractmethod
     def level(self, value: int | str) -> None:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def handlers(self) -> dict[str, "BaseAsyncHandler"]:
         raise NotImplementedError
 
     @abstractmethod
