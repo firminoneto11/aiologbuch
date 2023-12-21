@@ -12,14 +12,14 @@ from nlogging.records import LogRecord
 from .base import BaseLogger
 
 if TYPE_CHECKING:
+    from _typeshed import OptExcInfo
+
     from nlogging.handlers import BaseAsyncHandler
 
     from .base import CallerInfo, MessageType
 
 
 class NLogger(Filterer, BaseLogger):
-    handlers: list["BaseAsyncHandler"]
-
     @classmethod
     def create_logger(cls, name: str, level: int | str):
         stream_handler = AsyncStreamHandler(stream=stderr)
@@ -35,7 +35,7 @@ class NLogger(Filterer, BaseLogger):
         Filterer.__init__(self)
         self.name = name
         self._level = check_level(level)
-        self.handlers = []
+        self._handlers = {}
         self.disabled = False
 
     @property
@@ -45,6 +45,10 @@ class NLogger(Filterer, BaseLogger):
     @level.setter
     def level(self, value: str | int):
         self._level = check_level(value)
+
+    @property
+    def handlers(self):
+        return self._handlers
 
     async def debug(self, msg: "MessageType"):
         if self.is_enabled_for(LogLevel.DEBUG):
@@ -86,8 +90,8 @@ class NLogger(Filterer, BaseLogger):
         filename: str,
         function_name: str,
         line_number: int,
-        exc_info,
-        extra: Optional[dict] = None,
+        exc_info: Optional["OptExcInfo"],
+        extra: Optional[dict],
     ):
         return LogRecord(
             name=name,
@@ -128,21 +132,20 @@ class NLogger(Filterer, BaseLogger):
             await self.call_handlers(record)
 
     def add_handler(self, handler: "BaseAsyncHandler"):
-        if handler not in self.handlers:
-            self.handlers.append(handler)
+        if handler.id not in self.handlers:
+            self.handlers[handler.id] = handler
 
     def remove_handler(self, handler: "BaseAsyncHandler"):
-        if handler in self.handlers:
-            self.handlers.remove(handler)
+        self.handlers.pop(handler.id, None)
 
     def has_handlers(self):
-        return len(self.handlers) > 0
+        return len(self.handlers.keys()) > 0
 
     async def call_handlers(self, record: LogRecord):
         if not self.has_handlers():
-            raise ValueError("No handlers found for logger")
+            raise ValueError("No handlers found for the logger")
 
-        for handler in self.handlers:
+        for handler in self.handlers.values():
             if record.levelno >= handler.level:
                 await handler.handle(record)
 
@@ -154,5 +157,5 @@ class NLogger(Filterer, BaseLogger):
     async def disable(self):
         if self.disabled:
             return
-        [await handler.close() for handler in self.handlers]
+        [await handler.close() for handler in self.handlers.values()]
         self.disabled = True
