@@ -1,14 +1,20 @@
 from typing import TYPE_CHECKING
-from uuid import uuid4
 
 if TYPE_CHECKING:
     from nlogging.records import LogRecord
 
 
+def _filter_id_generator():
+    i = 1
+    while True:
+        yield str(i)
+        i += 1
+
+
 class Filter:
     def __init__(self, level: int):
         self._level = level
-        self._id = uuid4().hex
+        self._id = next(_filter_id_generator())
 
     @property
     def id(self):
