@@ -118,5 +118,9 @@ class BaseLogger(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def update_handlers_level(self) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def disable(self) -> None:
         raise NotImplementedError

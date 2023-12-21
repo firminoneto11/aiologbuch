@@ -44,7 +44,11 @@ class NLogger(Filterer, BaseLogger):
 
     @level.setter
     def level(self, value: str | int):
+        should_update_handlers = self.level != value
         self._level = check_level(value)
+
+        if should_update_handlers:
+            self.update_handlers_level()
 
     @property
     def handlers(self):
@@ -142,6 +146,10 @@ class NLogger(Filterer, BaseLogger):
         if self.disabled:
             return False
         return level >= self.level
+
+    def update_handlers_level(self):
+        for handler in self.handlers.values():
+            handler.level = self.level
 
     async def disable(self):
         if self.disabled:
