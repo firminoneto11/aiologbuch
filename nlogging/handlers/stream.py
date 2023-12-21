@@ -15,7 +15,7 @@ class AsyncStreamHandler(BaseAsyncHandler):
     terminator = "\n"
 
     def __init__(self, stream: TextIO):
-        BaseAsyncHandler.__init__(self)
+        super().__init__()
         self._closed = True
         self._writer = None
         self._stream = stream

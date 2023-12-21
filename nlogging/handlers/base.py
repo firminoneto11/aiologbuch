@@ -23,7 +23,7 @@ class BaseAsyncHandler(Filterer):
     _formatter: Optional[BaseFormatter]
 
     def __init__(self):
-        Filterer.__init__(self)
+        super().__init__()
         self._level = LogLevel.NOTSET
         self._formatter = None
         self._lock = Lock()

@@ -32,7 +32,7 @@ class NLogger(Filterer, BaseLogger):
         return logger
 
     def __init__(self, name: str, level: int | str):
-        Filterer.__init__(self)
+        super().__init__()
         self.name = name
         self._level = check_level(level)
         self._handlers = {}
