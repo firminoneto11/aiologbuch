@@ -1,13 +1,15 @@
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from logging import LogRecord
 
 
+@lru_cache(maxsize=1)
 def _filter_id_generator():
     i = 1
     while True:
-        yield str(i)
+        yield i
         i += 1
 
 
@@ -19,6 +21,10 @@ class Filter:
     @property
     def id(self):
         return self._id
+
+    @property
+    def level(self):
+        return self._level
 
     def filter(self, record: "LogRecord"):
         return record.levelno >= self._level
