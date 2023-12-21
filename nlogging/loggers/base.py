@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional, Self, TypedDict
 
 if TYPE_CHECKING:
+    from _typeshed import OptExcInfo
+
     from nlogging.handlers import BaseAsyncHandler
     from nlogging.records import LogRecord
 
@@ -72,13 +74,13 @@ class BaseLogger(ABC):
     def make_record(
         self,
         name: str,
-        msg: "MessageType",
         level: int,
+        msg: "MessageType",
         filename: str,
         function_name: str,
         line_number: int,
-        exc_info,
-        extra: Optional[dict] = None,
+        exc_info: Optional["OptExcInfo"],
+        extra: Optional[dict],
     ) -> "LogRecord":
         raise NotImplementedError
 
