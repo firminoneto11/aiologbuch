@@ -35,6 +35,6 @@ class LoggerManagerSingleton[LC: BaseLogger]:
         logger = self._active_loggers[name]
 
         if logger.level != level:
-            logger.setLevel(level)
+            logger.level = level
 
         return logger
