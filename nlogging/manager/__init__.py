@@ -22,7 +22,7 @@ class LoggerManagerSingleton[LC: BaseLogger]:
         return cls._instance
 
     def _set_inner_logger(self, logger_class: LC):
-        if not is_direct_subclass(cls_or_instance=logger_class, base_cls=BaseLogger):
+        if not is_direct_subclass(value=logger_class, base_cls=BaseLogger):
             raise TypeError(f"'logger_class' must be a {BaseLogger.__name__} subclass")
         self._logger_class = logger_class
 

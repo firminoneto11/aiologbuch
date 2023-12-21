@@ -43,7 +43,7 @@ class BaseAsyncHandler(Filterer):
 
     @formatter.setter
     def formatter(self, value: BaseFormatter):
-        if not is_direct_subclass(cls_or_instance=value, base_cls=BaseFormatter):
+        if not is_direct_subclass(value=value, base_cls=BaseFormatter):
             raise TypeError("'formatter' must be a subclass of BaseFormatter")
         self._formatter = value
 
