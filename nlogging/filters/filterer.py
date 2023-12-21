@@ -24,8 +24,8 @@ class Filterer:
         self.filters.pop(filter.id, None)
 
     def filter(self, record: "LogRecord"):
-        for key in self.filters:
-            if not self.filters[key].filter(record):
+        for ft in self.filters.values():
+            if not ft.filter(record):
                 return False
         return True
 
