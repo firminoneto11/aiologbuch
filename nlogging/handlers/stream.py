@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, TextIO
 from nlogging.protocols import AIOProtocol
 
 if TYPE_CHECKING:
-    from nlogging.records import LogRecord
+    from logging import LogRecord
 
 from .base import BaseAsyncHandler
 
@@ -55,7 +55,7 @@ class AsyncStreamHandler(BaseAsyncHandler):
 
     async def write_and_flush(self, msg: str):
         if (not self.writer) or (self.closed):
-            self.writer = await self._init_writer()
+            self._writer = await self._init_writer()
             self._closed = False
         self.writer.write(msg.encode())
         await self.flush()
