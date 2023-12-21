@@ -85,8 +85,8 @@ class NLogger(Filterer, BaseLogger):
     def make_record(
         self,
         name: str,
-        msg: "MessageType",
         level: int,
+        msg: "MessageType",
         filename: str,
         function_name: str,
         line_number: int,
@@ -116,8 +116,8 @@ class NLogger(Filterer, BaseLogger):
 
         record = self.make_record(
             name=self.name,
-            msg=msg,
             level=level,
+            msg=msg,
             filename=caller["caller_filename"],
             function_name=caller["caller_function_name"],
             line_number=caller["caller_line_number"],
