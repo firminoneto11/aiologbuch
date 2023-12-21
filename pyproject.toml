@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nlogging"
-version = "0.0.1"
-description = "A tiny logging tool for Python"
+version = "0.1.0"
+description = "A tiny logging tool for Python, heavily opinionated, but very easy to use."
 authors = ["Firmino Neto <firminoneto@protonmail.com>"]
 readme = "README.md"
 
