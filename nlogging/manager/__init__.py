@@ -10,9 +10,9 @@ class LoggerManagerSingleton[LC: BaseLogger]:
     _logger_class: LC
 
     def __new__(cls, logger_class: LC):
-        instance = cls._get_instance()
-        instance._set_inner_logger(logger_class=logger_class)
-        return instance
+        self = cls._get_instance()
+        self._set_inner_logger(logger_class=logger_class)
+        return self
 
     @classmethod
     def _get_instance(cls):
@@ -27,10 +27,8 @@ class LoggerManagerSingleton[LC: BaseLogger]:
         self._logger_class = logger_class
 
     def get_logger(self, name: str, level: str | int):
-        lc = self._logger_class
-
         if name not in self._active_loggers:
-            self._active_loggers[name] = lc.create_logger(name=name, level=level)
+            self._active_loggers[name] = self._logger_class.create_logger(name, level)
 
         logger = self._active_loggers[name]
 
@@ -38,3 +36,18 @@ class LoggerManagerSingleton[LC: BaseLogger]:
             logger.level = level
 
         return logger
+
+    @classmethod
+    async def clean_loggers(cls):
+        self = cls._get_instance()
+        for name in self._active_loggers:
+            logger = self._active_loggers[name]
+            await logger.disable()
+        self._active_loggers = {}
+
+    @classmethod
+    async def disable_logger(cls, name: str):
+        self = cls._get_instance()
+        if (logger := self._active_loggers.pop(name, None)) is None:
+            raise ValueError(f"{name!r} not in the map of active loggers")
+        await logger.disable()
