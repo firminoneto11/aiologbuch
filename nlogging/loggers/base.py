@@ -43,6 +43,10 @@ class BaseLogger(ABC):
     def handlers(self) -> dict[str, "BaseAsyncHandler"]:
         raise NotImplementedError
 
+    @property
+    def mem_addr(self) -> str:
+        raise NotImplementedError
+
     @abstractmethod
     async def debug(self, msg: "MessageType") -> None:
         raise NotImplementedError

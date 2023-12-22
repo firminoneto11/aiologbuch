@@ -43,7 +43,7 @@ class NLogger(Filterer, BaseLogger):
         return self._level
 
     @level.setter
-    def level(self, value: str | int):
+    def level(self, value: int | str):
         should_update_handlers = self.level != value
         self._level = check_level(value)
 
@@ -53,6 +53,10 @@ class NLogger(Filterer, BaseLogger):
     @property
     def handlers(self):
         return self._handlers
+
+    @property
+    def mem_addr(self):
+        return hex(id(self))
 
     async def debug(self, msg: "MessageType"):
         if self.is_enabled_for(LogLevel.DEBUG):
