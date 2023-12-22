@@ -34,7 +34,7 @@ class BaseAsyncHandler(Filterer):
         return self._level
 
     @level.setter
-    def level(self, value: str | int):
+    def level(self, value: int | str):
         self._level = check_level(value)
 
     @property

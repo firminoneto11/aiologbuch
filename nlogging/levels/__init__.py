@@ -12,6 +12,7 @@ class LogLevel(IntEnum):
 
 
 NAME_TO_LEVEL = {level: LogLevel[level].value for level in LogLevel.__members__}
+
 LEVEL_TO_NAME = {level.value: level.name for level in LogLevel}
 
 
@@ -22,7 +23,7 @@ def get_level_name(level: int):
         raise ValueError(f"Unknown level name: {level}") from exc
 
 
-def check_level(level: str | int):
+def check_level(level: int | str):
     if isinstance(level, int):
         if level not in LEVEL_TO_NAME:
             raise ValueError(f"Unknown level: {level}")

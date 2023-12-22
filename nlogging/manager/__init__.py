@@ -26,7 +26,7 @@ class LoggerManagerSingleton[LC: BaseLogger]:
             raise TypeError(f"'logger_class' must be a {BaseLogger.__name__} subclass")
         self._logger_class = logger_class
 
-    def get_logger(self, name: str, level: str | int):
+    def get_logger(self, name: str, level: int | str):
         if name not in self._active_loggers:
             self._active_loggers[name] = self._logger_class.create_logger(name, level)
 
