@@ -43,7 +43,7 @@ branch = true
 [tool.coverage.report]
 skip_covered = true
 precision = 2
-fail_under = 80
+fail_under = 90
 exclude_also = ["if TYPE_CHECKING:"]
 
 [tool.coverage.html]
