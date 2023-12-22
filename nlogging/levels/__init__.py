@@ -8,7 +8,6 @@ class LogLevel(IntEnum):
     WARNING = logging.WARNING
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
-    FATAL = logging.FATAL
     NOTSET = logging.NOTSET
 
 
