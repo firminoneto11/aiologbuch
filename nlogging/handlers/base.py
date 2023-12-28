@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
 from nlogging.formatters import BaseFormatter
-from nlogging.levels import LogLevel, check_level
+from nlogging.levels import check_level
 from nlogging.settings import RAISE_EXCEPTIONS
 from nlogging.utils import is_direct_subclass
 
@@ -24,10 +24,10 @@ def _handler_id_generator():
 class BaseAsyncHandler(Filterer):
     _formatter: Optional[BaseFormatter]
 
-    def __init__(self):
+    def __init__(self, level: int | str, formatter: BaseFormatter):
         super().__init__()
-        self._level = LogLevel.NOTSET
-        self._formatter = None
+        self.level = level
+        self.formatter = formatter
         self._lock = Lock()
         self._id = next(_handler_id_generator())
 

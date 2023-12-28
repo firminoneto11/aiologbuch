@@ -6,6 +6,8 @@ from nlogging.protocols import AIOProtocol
 if TYPE_CHECKING:
     from logging import LogRecord
 
+    from nlogging.formatters import BaseFormatter
+
 from .base import BaseAsyncHandler
 
 
@@ -14,8 +16,8 @@ class AsyncStreamHandler(BaseAsyncHandler):
 
     terminator = "\n"
 
-    def __init__(self, stream: TextIO):
-        super().__init__()
+    def __init__(self, stream: TextIO, level: int | str, formatter: "BaseFormatter"):
+        super().__init__(level=level, formatter=formatter)
         self._closed = True
         self._writer = None
         self._stream = stream

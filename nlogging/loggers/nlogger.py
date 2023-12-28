@@ -22,13 +22,10 @@ if TYPE_CHECKING:
 class NLogger(Filterer, BaseAsyncLogger):
     @classmethod
     def create_logger(cls, name: str, level: int | str):
-        stream_handler = AsyncStreamHandler(stream=stderr)
-        stream_handler.level = level
-        stream_handler.formatter = JsonFormatter()
-
         logger = cls(name, level)
-        logger.add_handler(stream_handler)
-
+        logger.add_handler(
+            AsyncStreamHandler(stream=stderr, level=level, formatter=JsonFormatter())
+        )
         return logger
 
     def __init__(self, name: str, level: int | str):
