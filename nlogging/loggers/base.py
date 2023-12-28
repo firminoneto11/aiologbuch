@@ -90,10 +90,7 @@ class BaseAsyncLogger(ABC):
 
     @abstractmethod
     async def _log(
-        self,
-        level: int,
-        msg: "MessageType",
-        exc_info: bool = False,
+        self, level: int, msg: "MessageType", exc_info: bool = False
     ) -> None:
         raise NotImplementedError
 
@@ -127,4 +124,46 @@ class BaseAsyncLogger(ABC):
 
     @abstractmethod
     async def disable(self) -> None:
+        raise NotImplementedError
+
+
+class BaseSyncHandler(BaseAsyncLogger):
+    @abstractmethod
+    def debug(self, msg: "MessageType") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def info(self, msg: "MessageType") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def warning(self, msg: "MessageType") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def error(self, msg: "MessageType") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def exception(self, msg: "MessageType") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def critical(self, msg: "MessageType") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _log(self, level: int, msg: "MessageType", exc_info: bool = False) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def handle(self, record: "LogRecord") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def call_handlers(self, record: "LogRecord") -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def disable(self) -> None:
         raise NotImplementedError
