@@ -42,10 +42,6 @@ class AsyncStreamHandler(BaseAsyncHandler):
 
         self._stream = value
 
-    async def flush(self):
-        if self.writer:
-            await self.writer.drain()
-
     async def emit(self, record: "LogRecord"):
         try:
             msg = self.format(record) + self.terminator
@@ -54,24 +50,21 @@ class AsyncStreamHandler(BaseAsyncHandler):
             await self.handle_error(record)
 
     async def write_and_flush(self, msg: str):
-        if (not self.writer) or (self.closed):
-            self._writer = await self._init_writer()
-            self._closed = False
-        self.writer.write(msg.encode())
-        await self.flush()
+        writer = await self._init_writer()
+        writer.write(msg.encode())
+        await writer.drain()
 
     async def close(self):
         if (self.writer) and (not self.closed):
             await self.acquire()
             try:
-                await self.flush()
+                await self.writer.drain()
                 self.writer.close()
                 await self.writer.wait_closed()
+                self._closed = True
+                self._writer = None
             finally:
                 self.release()
-
-            self._closed = True
-            self._writer = None
 
     async def _init_writer(self):
         if (self.writer) and (not self.closed):
@@ -84,8 +77,10 @@ class AsyncStreamHandler(BaseAsyncHandler):
             transport, protocol = await loop.connect_write_pipe(
                 AIOProtocol, self.stream
             )
-            return StreamWriter(
+            self._writer = StreamWriter(
                 transport=transport, protocol=protocol, reader=None, loop=loop
             )
+            self._closed = False
+            return self._writer
         finally:
             self.release()

@@ -1,4 +1,5 @@
 from asyncio import Lock, to_thread
+from functools import lru_cache
 from logging import Handler
 from typing import TYPE_CHECKING, Optional
 
@@ -12,10 +13,11 @@ if TYPE_CHECKING:
     from logging import LogRecord
 
 
+@lru_cache(maxsize=1)
 def _handler_id_generator():
     i = 1
     while True:
-        yield str(i)
+        yield i
         i += 1
 
 
@@ -58,8 +60,8 @@ class BaseAsyncHandler(Filterer):
     async def emit(self, record: "LogRecord") -> None:
         raise NotImplementedError("emit must be implemented by Handler subclasses")
 
-    async def flush(self) -> None:
-        raise NotImplementedError("flush must be implemented by Handler subclasses")
+    # async def flush(self) -> None:
+    #     raise NotImplementedError("flush must be implemented by Handler subclasses")
 
     async def close(self) -> None:
         raise NotImplementedError("close must be implemented by Handler subclasses")
