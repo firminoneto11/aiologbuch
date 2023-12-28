@@ -1,14 +1,9 @@
-from dataclasses import dataclass
+from unittest.mock import MagicMock
 
 from pytest import mark
 
 from nlogging.filters import Filter
 from nlogging.filters.filter import _filter_id_generator
-
-
-@dataclass
-class MockRecord:
-    levelno: int
 
 
 @mark.unit
@@ -24,7 +19,7 @@ class MockRecord:
 )
 def test_filter(filter_level: int, record_level: int, expected: bool):
     _filter = Filter(level=filter_level)
-    record = MockRecord(levelno=record_level)
+    record = MagicMock(levelno=record_level)
 
     assert _filter.id == next(_filter_id_generator()) - 1
     assert _filter.level == filter_level
