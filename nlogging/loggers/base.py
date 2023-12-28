@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     type MessageType = str | dict
 
 
-class BaseLogger(ABC):
+class BaseAsyncLogger(ABC):
     _handlers: dict[str, "BaseAsyncHandler"]
 
     @classmethod

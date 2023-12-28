@@ -9,7 +9,7 @@ from nlogging.formatters import JsonFormatter
 from nlogging.handlers import AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
 
-from .base import BaseLogger
+from .base import BaseAsyncLogger
 
 if TYPE_CHECKING:
     from _typeshed import OptExcInfo
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .base import CallerInfo, MessageType
 
 
-class NLogger(Filterer, BaseLogger):
+class NLogger(Filterer, BaseAsyncLogger):
     @classmethod
     def create_logger(cls, name: str, level: int | str):
         stream_handler = AsyncStreamHandler(stream=stderr)

@@ -1,9 +1,9 @@
 from pytest import fixture
 
-from nlogging.manager import LoggerManagerSingleton
+from nlogging.manager import AsyncLoggerManagerSingleton
 
 
 @fixture
 async def clean_up_manager():
     yield
-    await LoggerManagerSingleton.clean_loggers()
+    await AsyncLoggerManagerSingleton.clean_loggers()

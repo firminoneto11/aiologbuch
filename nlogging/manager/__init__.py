@@ -1,10 +1,10 @@
 from typing import Optional, Self
 
-from nlogging.loggers import BaseLogger
+from nlogging.loggers import BaseAsyncLogger
 from nlogging.utils import is_direct_subclass
 
 
-class LoggerManagerSingleton[LC: BaseLogger]:
+class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
     _instance: Optional[Self] = None
     _active_loggers: dict[str, LC]
     _logger_class: LC
@@ -22,8 +22,10 @@ class LoggerManagerSingleton[LC: BaseLogger]:
         return cls._instance
 
     def _set_inner_logger(self, logger_class: LC):
-        if not is_direct_subclass(value=logger_class, base_cls=BaseLogger):
-            raise TypeError(f"'logger_class' must be a {BaseLogger.__name__} subclass")
+        if not is_direct_subclass(value=logger_class, base_cls=BaseAsyncLogger):
+            raise TypeError(
+                f"'logger_class' must be a {BaseAsyncLogger.__name__} subclass"
+            )
         self._logger_class = logger_class
 
     def get_logger(self, name: str, level: int | str):

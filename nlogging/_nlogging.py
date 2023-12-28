@@ -1,7 +1,7 @@
 from typing import Literal
 
 from .loggers import NLogger
-from .manager import LoggerManagerSingleton
+from .manager import AsyncLoggerManagerSingleton
 from .settings import ROOT_LOGGER_NAME
 
 
@@ -18,5 +18,5 @@ def get_logger(
 
     :return: A NLogger instance.
     """
-    manager = LoggerManagerSingleton[NLogger](logger_class=NLogger)
+    manager = AsyncLoggerManagerSingleton[NLogger](logger_class=NLogger)
     return manager.get_logger(name=name, level=level)
