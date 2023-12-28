@@ -7,8 +7,7 @@ if TYPE_CHECKING:
 
 
 class Filterer:
-    if TYPE_CHECKING:
-        filters: dict[str, "Filter"]
+    filters: dict[str, "Filter"]
 
     def __init__(self):
         self.filters = dict()
@@ -35,3 +34,6 @@ class Filterer:
 
         if (adding) and (not hasattr(filter, "filter")):
             raise TypeError("Filter must have a filter method")
+
+        if (adding) and (not callable(filter.filter)):
+            raise TypeError("The 'filter' method must be callable")
