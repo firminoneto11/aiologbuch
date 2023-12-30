@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
     from _typeshed import OptExcInfo
 
-    from nlogging.handlers import BaseAsyncHandler
+    from nlogging.handlers import BaseAsyncHandler, BaseSyncHandler
 
     class CallerInfo(TypedDict):
         caller_filename: str
@@ -127,7 +127,9 @@ class BaseAsyncLogger(ABC):
         raise NotImplementedError
 
 
-class BaseSyncHandler(BaseAsyncLogger):
+class BaseSyncLogger(BaseAsyncLogger):
+    _handlers: dict[str, "BaseSyncHandler"]
+
     @abstractmethod
     def debug(self, msg: "MessageType") -> None:
         raise NotImplementedError

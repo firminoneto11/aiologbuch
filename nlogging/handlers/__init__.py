@@ -1,2 +1,2 @@
-from .base import BaseAsyncHandler  # noqa
-from .stream import AsyncStreamHandler  # noqa
+from .base import BaseAsyncHandler, BaseSyncHandler  # noqa
+from .stream import AsyncStreamHandler, SyncStreamHandler  # noqa

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
     from nlogging.formatters import BaseFormatter
 
-from .base import BaseAsyncHandler
+from .base import BaseAsyncHandler, BaseSyncHandler
 
 
 class AsyncStreamHandler(BaseAsyncHandler):
@@ -84,5 +84,31 @@ class AsyncStreamHandler(BaseAsyncHandler):
             )
             self._closed = False
             return self._writer
+        finally:
+            self.release()
+
+
+class SyncStreamHandler(BaseSyncHandler):
+    _writer: Optional[StreamWriter]
+
+    terminator = "\n"
+
+    def __init__(self, stream: TextIO, level: int | str, formatter: "BaseFormatter"):
+        super().__init__(level=level, formatter=formatter)
+        self.stream = stream
+
+    def emit(self, record: "LogRecord"):
+        try:
+            msg = self.format(record) + self.terminator
+            self.write_and_flush(msg)
+        except:  # noqa
+            self.handle_error(record)
+
+    def write_and_flush(self, msg: str):
+        self.stream.write(msg)
+        self.acquire()
+        try:
+            if self.stream and hasattr(self.stream, "flush"):
+                self.stream.flush()
         finally:
             self.release()
