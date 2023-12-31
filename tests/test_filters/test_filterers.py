@@ -1,8 +1,10 @@
 from collections import namedtuple
+from unittest.mock import MagicMock
 
 from pytest import mark, raises
 
-from nlogging.filters import Filterer
+from nlogging.filters import Filter, Filterer
+from nlogging.levels import LogLevel
 
 
 @mark.unit
@@ -71,6 +73,20 @@ def test_add_filter_should_raise_if_filter_is_not_valid():
 
 
 @mark.unit
+def test_adding_filter_with_same_id_should_not_replace():
+    filterer = Filterer()
+
+    filter1 = namedtuple("Filter", ("id", "filter"))(id="1", filter=lambda x: x)
+    filter2 = namedtuple("Filter", ("id", "filter"))(id="1", filter=lambda x: x)
+
+    filterer.add_filter(filter1)
+    filterer.add_filter(filter2)
+
+    assert len(filterer.filters) == 1
+    assert filterer.filters["1"] is filter1
+
+
+@mark.unit
 def test_remove_filter_should_raise_if_filter_is_not_valid():
     filterer = Filterer()
 
@@ -93,3 +109,21 @@ def test_remove_filter_should_remove_filter_from_filters_map():
     filterer.remove_filter(filter_)
 
     assert filters_before and filterer.filters == {}
+
+
+@mark.unit
+@mark.parametrize(
+    argnames="record,filter_level,expected",
+    argvalues=(
+        (MagicMock(levelno=LogLevel.INFO), LogLevel.DEBUG, True),
+        (MagicMock(levelno=LogLevel.INFO), LogLevel.INFO, True),
+        (MagicMock(levelno=LogLevel.DEBUG), LogLevel.INFO, False),
+        (MagicMock(levelno=LogLevel.CRITICAL), LogLevel.INFO, True),
+        (MagicMock(levelno=LogLevel.INFO), LogLevel.CRITICAL, False),
+    ),
+)
+def test_filter(record: object, filter_level: int, expected: bool):
+    filterer = Filterer()
+    filterer.add_filter(Filter(filter_level))
+
+    assert filterer.filter(record) == expected
