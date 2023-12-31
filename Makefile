@@ -1,5 +1,12 @@
 cov := coverage run -m pytest
 
+env:
+	rm -rf venv/
+	python3.12 -m venv venv
+
+deps:
+	poetry install --no-root
+
 cov:
 	$(cov)
 	coverage report
