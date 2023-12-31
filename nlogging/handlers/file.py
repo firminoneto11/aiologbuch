@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from anyio.streams.file import FileWriteStream
 
@@ -6,36 +6,45 @@ from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
     from logging import LogRecord
+    from os import PathLike
 
+    from nlogging._types import LevelType
     from nlogging.formatters import BaseFormatter
 
 
 class AsyncFileHandler(BaseAsyncHandler):
-    terminator = "\n"
+    _stream: Optional[FileWriteStream]
 
-    def __init__(self, filename: str, level: int | str, formatter: "BaseFormatter"):
+    terminator = b"\n"
+
+    def __init__(
+        self,
+        filename: "str | PathLike[str]",
+        level: "LevelType",
+        formatter: "BaseFormatter",
+    ):
         super().__init__(level=level, formatter=formatter)
-        self._closed = True
+        self.closed = True
         self._filename = filename
         self._stream = None
-
-    @property
-    def closed(self):
-        return self._closed
 
     @property
     def stream(self):
         return self._stream
 
     @stream.setter
-    def stream(self, value: FileWriteStream):
-        if not self.closed:
-            raise ValueError("Cannot change stream on open handler")
+    def stream(self, value: Optional[FileWriteStream]):
+        if self.is_open:
+            raise RuntimeError("Cannot change stream on open handler")
 
-        if value is self.stream:
+        if self.stream is value:
             return
 
         self._stream = value
+
+    @property
+    def is_open(self):
+        return bool(self.stream) and (not self.closed)
 
     async def emit(self, record: "LogRecord"):
         try:
@@ -44,23 +53,23 @@ class AsyncFileHandler(BaseAsyncHandler):
         except:  # noqa
             await self.handle_error(record)
 
-    async def write_and_flush(self, msg: str):
+    async def write_and_flush(self, msg: bytes):
         if not self.stream:
-            self.stream = await FileWriteStream.from_path(
-                path=self._filename, append=True
-            )
-            self._closed = False
+            async with self.lock:
+                self.stream = await FileWriteStream.from_path(
+                    path=self._filename, append=True
+                )
+                self.closed = False
 
-        if self.closed:
-            raise ValueError("I/O operation on closed file")
+        if not self.is_open:
+            raise RuntimeError("I/O operation on closed file")
 
-        await self.acquire()
-        try:
-            await self.stream.send(msg.encode())
-        finally:  # noqa
-            self.release()
+        async with self.lock:
+            await self.stream.send(msg)
 
     async def close(self):
-        if not self.closed:
-            await self.stream.aclose()
-            self._closed = True
+        if self.is_open:
+            async with self.lock:
+                await self.stream.aclose()
+                self.stream = None
+                self.closed = True
