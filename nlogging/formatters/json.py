@@ -27,4 +27,4 @@ class JsonFormatter(BaseFormatter):
             "line_number": record.lineno,
             "message": record.getMessage(),
         }
-        return self._ensure_str(log=json.dumps(log_data))
+        return self._ensure_bytes(log=json.dumps(log_data))

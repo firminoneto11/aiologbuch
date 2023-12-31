@@ -1,14 +1,9 @@
 from datetime import datetime, timezone
 from time import strftime
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from logging import LogRecord
-
-    class CallerInfo(TypedDict):
-        caller_filename: str
-        caller_function_name: str
-        caller_line_number: int
 
 
 class BaseFormatter:
@@ -19,18 +14,18 @@ class BaseFormatter:
     def converter(self, secs: float):
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
 
-    def format(self, record: "LogRecord") -> str:
+    def format(self, record: "LogRecord") -> bytes:
         raise NotImplementedError("format() must be implemented in subclass")
 
     def format_time(self, record: "LogRecord"):
         timestamp = strftime(self.DEFAULT_DATE_FORMAT, self.converter(record.created))
         return self.DEFAULT_MSEC_FORMAT % (timestamp, record.msecs)
 
-    def _ensure_str(self, log: str | bytes):
-        if isinstance(log, str):
-            return log
+    def _ensure_bytes(self, log: str | bytes):
         if isinstance(log, bytes):
-            return log.decode()
+            return log
+        if isinstance(log, str):
+            return log.encode()
 
         raise TypeError(
             f"Serialized object must be of str or bytes type, not {type(log)}"
