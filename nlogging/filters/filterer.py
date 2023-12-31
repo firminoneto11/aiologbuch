@@ -15,7 +15,7 @@ class Filterer:
     def add_filter(self, filter: "Filter"):
         self._validate_filter(filter=filter, adding=True)
 
-        if filter.id not in self.filters:  # pragma: no branch
+        if filter.id not in self.filters:
             self.filters[filter.id] = filter
 
     def remove_filter(self, filter: "Filter"):
