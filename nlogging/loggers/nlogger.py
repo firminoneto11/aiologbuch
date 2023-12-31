@@ -1,12 +1,11 @@
 from inspect import stack
 from logging import LogRecord
 from sys import exc_info as get_exc_info
-from sys import stderr
 from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
 from nlogging.formatters import JsonFormatter
-from nlogging.handlers import AsyncFileHandler, AsyncStreamHandler
+from nlogging.handlers import AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
 
 from .base import BaseAsyncLogger
@@ -16,22 +15,17 @@ if TYPE_CHECKING:
 
     from nlogging.handlers import BaseAsyncHandler
 
-    from .base import CallerInfo, MessageType
+    from .base import CallerInfo, LevelType, MessageType
 
 
 class NLogger(Filterer, BaseAsyncLogger):
     @classmethod
-    def create_logger(cls, name: str, level: int | str):
+    def create_logger(cls, name: str, level: "LevelType"):
         logger = cls(name, level)
-        logger.add_handler(
-            AsyncStreamHandler(stream=stderr, level=level, formatter=JsonFormatter())
-        )
-        # logger.add_handler(
-        #     AsyncFileHandler(filename="log.log", level=level, formatter=JsonFormatter())
-        # )
+        logger.add_handler(AsyncStreamHandler(level=level, formatter=JsonFormatter()))
         return logger
 
-    def __init__(self, name: str, level: int | str):
+    def __init__(self, name: str, level: "LevelType"):
         super().__init__()
         self.name = name
         self._level = check_level(level)
@@ -43,7 +37,7 @@ class NLogger(Filterer, BaseAsyncLogger):
         return self._level
 
     @level.setter
-    def level(self, value: int | str):
+    def level(self, value: "LevelType"):
         should_update_handlers = self.level != value
         self._level = check_level(value)
 
@@ -159,4 +153,5 @@ class NLogger(Filterer, BaseAsyncLogger):
         if self.disabled:
             return
         [await handler.close() for handler in self.handlers.values()]
+        self._handlers = {}
         self.disabled = True

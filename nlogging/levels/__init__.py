@@ -1,5 +1,9 @@
 import logging
 from enum import IntEnum
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from nlogging._types import LevelType
 
 
 class LogLevel(IntEnum):
@@ -23,7 +27,7 @@ def get_level_name(level: int):
         raise ValueError(f"Unknown level name: {level}") from exc
 
 
-def check_level(level: int | str):
+def check_level(level: "LevelType"):
     if isinstance(level, int):
         if level not in LEVEL_TO_NAME:
             raise ValueError(f"Unknown level: {level}")

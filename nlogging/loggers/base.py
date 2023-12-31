@@ -1,31 +1,27 @@
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Optional, Self, TypedDict
+from abc import ABCMeta, abstractmethod
+from typing import TYPE_CHECKING, Optional, Self
 
 if TYPE_CHECKING:
     from logging import LogRecord
 
     from _typeshed import OptExcInfo
 
+    from nlogging._types import CallerInfo, LevelType, MessageType
     from nlogging.handlers import BaseAsyncHandler, BaseSyncHandler
 
-    class CallerInfo(TypedDict):
-        caller_filename: str
-        caller_function_name: str
-        caller_line_number: int
 
-    type MessageType = str | dict
+class BaseAsyncLogger:
+    __metaclass__ = ABCMeta
 
-
-class BaseAsyncLogger(ABC):
     _handlers: dict[str, "BaseAsyncHandler"]
 
     @classmethod
     @abstractmethod
-    def create_logger(cls, name: str, level: int | str) -> Self:
+    def create_logger(cls, name: str, level: "LevelType") -> Self:
         raise NotImplementedError
 
     @abstractmethod
-    def __init__(self, name: str, level: int | str) -> None:
+    def __init__(self, name: str, level: "LevelType") -> None:
         raise NotImplementedError
 
     @property
@@ -35,7 +31,7 @@ class BaseAsyncLogger(ABC):
 
     @level.setter
     @abstractmethod
-    def level(self, value: int | str) -> None:
+    def level(self, value: "LevelType") -> None:
         raise NotImplementedError
 
     @property

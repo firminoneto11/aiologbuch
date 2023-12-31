@@ -1,7 +1,6 @@
 from inspect import stack
 from logging import LogRecord
 from sys import exc_info as get_exc_info
-from sys import stderr
 from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
@@ -16,19 +15,17 @@ if TYPE_CHECKING:
 
     from nlogging.handlers import BaseSyncHandler
 
-    from .base import CallerInfo, MessageType
+    from .base import CallerInfo, LevelType, MessageType
 
 
 class SyncNLogger(Filterer, BaseSyncLogger):
     @classmethod
-    def create_logger(cls, name: str, level: int | str):
+    def create_logger(cls, name: str, level: "LevelType"):
         logger = cls(name, level)
-        logger.add_handler(
-            SyncStreamHandler(stream=stderr, level=level, formatter=JsonFormatter())
-        )
+        logger.add_handler(SyncStreamHandler(level=level, formatter=JsonFormatter()))
         return logger
 
-    def __init__(self, name: str, level: int | str):
+    def __init__(self, name: str, level: "LevelType"):
         super().__init__()
         self.name = name
         self._level = check_level(level)
@@ -40,7 +37,7 @@ class SyncNLogger(Filterer, BaseSyncLogger):
         return self._level
 
     @level.setter
-    def level(self, value: int | str):
+    def level(self, value: "LevelType"):
         should_update_handlers = self.level != value
         self._level = check_level(value)
 
