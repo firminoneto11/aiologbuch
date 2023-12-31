@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional
 
 from nlogging.filters import Filterer
 from nlogging.formatters import JsonFormatter
-from nlogging.handlers import AsyncStreamHandler
+from nlogging.handlers import AsyncFileHandler, AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
 
 from .base import BaseAsyncLogger
@@ -26,6 +26,9 @@ class NLogger(Filterer, BaseAsyncLogger):
         logger.add_handler(
             AsyncStreamHandler(stream=stderr, level=level, formatter=JsonFormatter())
         )
+        # logger.add_handler(
+        #     AsyncFileHandler(filename="log.log", level=level, formatter=JsonFormatter())
+        # )
         return logger
 
     def __init__(self, name: str, level: int | str):

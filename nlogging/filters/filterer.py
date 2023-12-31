@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class Filterer:
-    filters: dict[str, "Filter"]
+    filters: dict[int, "Filter"]
 
     def __init__(self):
         self.filters = dict()
@@ -15,7 +15,7 @@ class Filterer:
     def add_filter(self, filter: "Filter"):
         self._validate_filter(filter=filter, adding=True)
 
-        if filter.id not in self.filters:
+        if filter.id not in self.filters:  # pragma: no branch
             self.filters[filter.id] = filter
 
     def remove_filter(self, filter: "Filter"):
