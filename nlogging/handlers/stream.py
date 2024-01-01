@@ -27,16 +27,14 @@ async def _get_stderr_writer():
     if _closed:
         raise RuntimeError("Writer was closed")
 
-    if _stderr_writer:
-        return _stderr_writer
-
     loop = get_running_loop()
 
-    async with _stderr_lock:
-        transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
-        _stderr_writer = StreamWriter(
-            transport=transport, protocol=protocol, reader=None, loop=loop
-        )
+    if not _stderr_writer:
+        async with _stderr_lock:
+            transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
+            _stderr_writer = StreamWriter(
+                transport=transport, protocol=protocol, reader=None, loop=loop
+            )
 
     return _stderr_writer
 
