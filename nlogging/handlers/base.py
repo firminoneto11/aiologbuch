@@ -1,9 +1,7 @@
 from functools import lru_cache
 from logging import Handler
-from threading import RLock
 from typing import TYPE_CHECKING, Optional
 
-from anyio import Lock
 from anyio.to_thread import run_sync
 
 from nlogging.filters import Filterer
@@ -24,10 +22,6 @@ def _handler_id_generator():
     while True:
         yield i
         i += 1
-
-
-_async_lock = Lock()
-_sync_lock = RLock()
 
 
 class BaseAsyncHandler(Filterer):
@@ -59,17 +53,17 @@ class BaseAsyncHandler(Filterer):
 
     @property
     def lock(self):
-        return _async_lock
+        raise NotImplementedError("'lock' must be implemented by Handler subclasses")
 
     @property
     def id(self):
         return self._id
 
     async def emit(self, record: "LogRecord") -> None:
-        raise NotImplementedError("emit must be implemented by Handler subclasses")
+        raise NotImplementedError("'emit' must be implemented by Handler subclasses")
 
     async def close(self) -> None:
-        raise NotImplementedError("close must be implemented by Handler subclasses")
+        raise NotImplementedError("'close' must be implemented by Handler subclasses")
 
     def format(self, record: "LogRecord"):
         if not self.formatter:
@@ -116,14 +110,17 @@ class BaseSyncHandler(Filterer):
 
     @property
     def lock(self):
-        return _sync_lock
+        raise NotImplementedError("'lock' must be implemented by Handler subclasses")
 
     @property
     def id(self):
         return self._id
 
     def emit(self, record: "LogRecord") -> None:
-        raise NotImplementedError("emit must be implemented by Handler subclasses")
+        raise NotImplementedError("'emit' must be implemented by Handler subclasses")
+
+    def close(self) -> None:
+        raise NotImplementedError("'close' must be implemented by Handler subclasses")
 
     def format(self, record: "LogRecord"):
         if not self.formatter:
