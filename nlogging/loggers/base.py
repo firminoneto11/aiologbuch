@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class BaseAsyncLogger:
     __metaclass__ = ABCMeta
 
-    _handlers: dict[str, "BaseAsyncHandler"]
+    _handlers: dict[int, "BaseAsyncHandler"]
 
     @classmethod
     @abstractmethod
@@ -124,7 +124,7 @@ class BaseAsyncLogger:
 
 
 class BaseSyncLogger(BaseAsyncLogger):
-    _handlers: dict[str, "BaseSyncHandler"]
+    _handlers: dict[int, "BaseSyncHandler"]
 
     @abstractmethod
     def debug(self, msg: "MessageType") -> None:
