@@ -1,6 +1,13 @@
-from pytest import fixture
+from pytest import fixture, mark
 
 from nlogging.manager import AsyncLoggerManagerSingleton
+
+pytestmark = [mark.anyio]
+
+
+@fixture
+def anyio_backend():
+    return "asyncio"
 
 
 @fixture
