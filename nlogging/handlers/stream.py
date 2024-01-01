@@ -2,6 +2,8 @@ from asyncio import StreamWriter, get_running_loop
 from sys import stderr
 from typing import TYPE_CHECKING, Optional
 
+from anyio import Lock
+
 from nlogging.protocols import AIOProtocol
 
 if TYPE_CHECKING:
@@ -12,34 +14,61 @@ if TYPE_CHECKING:
 
 from .base import BaseAsyncHandler, BaseSyncHandler
 
+_stderr_writer = None
+_stderr_lock = Lock()
+_closed = False
+
+
+async def _get_stderr_writer():
+    global _stderr_writer
+    global _stderr_lock
+    global _closed
+
+    if _closed:
+        raise RuntimeError("Writer was closed")
+
+    if _stderr_writer:
+        return _stderr_writer
+
+    loop = get_running_loop()
+
+    async with _stderr_lock:
+        transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
+        _stderr_writer = StreamWriter(
+            transport=transport, protocol=protocol, reader=None, loop=loop
+        )
+
+    return _stderr_writer
+
+
+async def _close_stderr_writer():
+    global _stderr_writer
+    global _stderr_lock
+    global _closed
+
+    if (_closed) or (not _stderr_writer):
+        return
+
+    async with _stderr_lock:
+        await _stderr_writer.drain()
+        _stderr_writer.close()
+        await _stderr_writer.wait_closed()
+        _stderr_writer = None
+        _closed = True
+
 
 class AsyncStreamHandler(BaseAsyncHandler):
     _writer: Optional[StreamWriter]
 
     terminator = b"\n"
 
+    @property
+    def lock(self):
+        global _stderr_lock
+        return _stderr_lock
+
     def __init__(self, level: "LevelType", formatter: "BaseFormatter"):
         super().__init__(level=level, formatter=formatter)
-        self.closed = True
-        self._writer = None
-
-    @property
-    def writer(self):
-        return self._writer
-
-    @writer.setter
-    def writer(self, value: Optional[StreamWriter]):
-        if self.is_open:
-            raise RuntimeError("Cannot change writer on open handler")
-
-        if self.writer is value:
-            return
-
-        self._writer = value
-
-    @property
-    def is_open(self):
-        return bool(self.writer) and (not self.closed)
 
     async def emit(self, record: "LogRecord"):
         try:
@@ -49,33 +78,13 @@ class AsyncStreamHandler(BaseAsyncHandler):
             await self.handle_error(record)
 
     async def write_and_flush(self, msg: bytes):
-        if not self.is_open:
-            await self._init_writer()
-
-        if not self.writer:
-            # NOTE: This is not likely to happen, but you never know...
-            raise RuntimeError("Writer was not initialized")
-
+        writer = await _get_stderr_writer()
         async with self.lock:
-            self.writer.write(msg)
-            await self.writer.drain()
+            writer.write(msg)
+            await writer.drain()
 
     async def close(self):
-        if self.is_open:
-            async with self.lock:
-                await self.writer.drain()
-                self.writer.close()
-                self.writer = None
-                self.closed = True
-
-    async def _init_writer(self):
-        loop = get_running_loop()
-        async with self.lock:
-            transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
-            self.writer = StreamWriter(
-                transport=transport, protocol=protocol, reader=None, loop=loop
-            )
-            self.closed = False
+        pass
 
 
 class SyncStreamHandler(BaseSyncHandler):
@@ -95,3 +104,6 @@ class SyncStreamHandler(BaseSyncHandler):
         with self.lock:
             stderr.write(msg.decode())
             stderr.flush()
+
+    def close(self):
+        pass
