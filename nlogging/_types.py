@@ -1,4 +1,5 @@
-from typing import TypedDict
+from types import TracebackType
+from typing import Literal, TypedDict
 
 
 class CallerInfo(TypedDict):
@@ -8,4 +9,6 @@ class CallerInfo(TypedDict):
 
 
 type MessageType = str | dict
-type LevelType = int | str
+type LevelType = int | Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+type ExcInfo = tuple[type[BaseException], BaseException, TracebackType]
+type OptExcInfo = ExcInfo | tuple[None, None, None]
