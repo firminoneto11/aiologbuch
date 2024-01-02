@@ -20,7 +20,6 @@ _resource_map: dict[str, "_StreamResource"] = {}
 class _StreamResource:
     lock: Lock
     filename: str
-    closed: bool = True
     stream: Optional[FileWriteStream] = None
 
     async def send(self, msg: bytes):
