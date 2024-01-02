@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, TypedDict
 
 from anyio import Lock
 from anyio.streams.file import FileWriteStream
@@ -12,9 +12,9 @@ if TYPE_CHECKING:
     from nlogging._types import LevelType
     from nlogging.formatters import BaseFormatter
 
-
-_map_write_lock = Lock()
-_resource_map: dict[str, "_StreamResource"] = {}
+    class MapType(TypedDict):
+        resource: "_StreamResource"
+        reference_count: int
 
 
 @dataclass
@@ -23,52 +23,85 @@ class _StreamResource:
     filename: str
     stream: Optional[FileWriteStream] = None
 
-    async def send(self, msg: bytes):
-        global _resource_map
-        global _map_write_lock
-
+    async def init_stream(self):
         async with self.lock:
             if not self.stream:
-                self.stream = await FileWriteStream.from_path(
-                    path=self.filename, append=True
-                )
+                self.stream = await FileWriteStream.from_path(self.filename, True)
 
-                async with _map_write_lock:
-                    _resource_map[self.filename] = self
-
+    async def send(self, msg: bytes):
+        async with self.lock:
+            if not self.stream:
+                raise RuntimeError("Stream is not initialized")
             await self.stream.send(msg)
 
     async def close(self):
-        global _resource_map
-        global _map_write_lock
-
-        if self.filename in _resource_map:
-            async with _map_write_lock:
-                _resource_map.pop(self.filename)
-
-        if self.stream:
-            async with self.lock:
+        async with self.lock:
+            if self.stream:
                 await self.stream.aclose()
                 self.stream = None
 
 
-class AsyncFileHandler(BaseAsyncHandler):
-    resource: _StreamResource
+@dataclass
+class _ResourceManager:
+    _lock = None
+    _map: dict[str, "MapType"] = None
 
-    terminator = b"\n"
+    @property
+    def lock(self):
+        if not self._lock:
+            self._lock = Lock()
+        return self._lock
+
+    @property
+    def map(self):
+        if not self._map:
+            self._map = {}
+        return self._map
+
+    async def request_resource(self, filename: str):
+        async with self.lock:
+            if content := self.map.get(filename):
+                resource = content["resource"]
+                content["reference_count"] += 1
+            else:
+                resource = _StreamResource(lock=Lock(), filename=filename)
+                self.map[filename] = {"resource": resource, "reference_count": 1}
+
+        await resource.init_stream()
+
+    async def send_message(self, filename: str, msg: bytes):
+        async with self.lock:
+            if not (content := self.map.get(filename)):
+                raise RuntimeError("Resource is not initialized")
+
+        await content["resource"].send(msg)
+
+    async def close_resource(self, filename: str):
+        resource = None
+
+        async with self.lock:
+            if content := self.map.get(filename):
+                content["reference_count"] -= 1
+                if content["reference_count"] <= 0:
+                    resource = self.map.pop(filename)["resource"]
+
+        if resource:
+            await resource.close()
+
+
+class AsyncFileHandler(BaseAsyncHandler):
+    should_request_resource = True
+    _filename: str
 
     def __init__(self, filename: str, level: "LevelType", formatter: "BaseFormatter"):
         if not filename:
             raise ValueError("'filename' cannot be empty")
-
         super().__init__(level=level, formatter=formatter)
+        self._filename = filename
 
-        global _resource_map
-
-        if _resource_map.get(filename):
-            raise ValueError(f"'{filename}' is already being used by another handler")
-
-        self.resource = _StreamResource(lock=Lock(), filename=filename)
+    @property
+    def filename(self):
+        return self._filename
 
     async def emit(self, record: "LogRecord"):
         try:
@@ -78,7 +111,19 @@ class AsyncFileHandler(BaseAsyncHandler):
             await self.handle_error(record)
 
     async def write_and_flush(self, msg: bytes):
-        await self.resource.send(msg)
+        global manager
+
+        if self.should_request_resource:
+            await manager.request_resource(self.filename)
+            self.should_request_resource = False
+
+        await manager.send_message(self.filename, msg)
 
     async def close(self):
-        await self.resource.close()
+        global manager
+
+        await manager.close_resource(self.filename)
+        self.should_request_resource = True
+
+
+manager = _ResourceManager()
