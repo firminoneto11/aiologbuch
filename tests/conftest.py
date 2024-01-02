@@ -1,6 +1,6 @@
 from pytest import fixture, mark
 
-from nlogging.manager import AsyncLoggerManagerSingleton
+from nlogging.loggers import AsyncLoggerManagerSingleton
 
 pytestmark = [mark.anyio]
 
