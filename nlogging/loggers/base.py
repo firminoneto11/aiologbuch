@@ -1,10 +1,8 @@
 from abc import ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Optional, Self
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from logging import LogRecord
-
-    from _typeshed import OptExcInfo
 
     from nlogging._types import CallerInfo, LevelType, MessageType
     from nlogging.handlers import BaseAsyncHandler, BaseSyncHandler
@@ -14,11 +12,6 @@ class BaseAsyncLogger:
     __metaclass__ = ABCMeta
 
     _handlers: dict[int, "BaseAsyncHandler"]
-
-    @classmethod
-    @abstractmethod
-    def create_logger(cls, name: str, level: "LevelType") -> Self:
-        raise NotImplementedError
 
     @abstractmethod
     def __init__(self, name: str, level: "LevelType") -> None:
@@ -56,11 +49,9 @@ class BaseAsyncLogger:
         raise NotImplementedError
 
     @abstractmethod
-    async def error(self, msg: "MessageType") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def exception(self, msg: "MessageType") -> None:
+    async def error(
+        self, msg: "MessageType", exc: Optional[BaseException] = None
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -80,13 +71,13 @@ class BaseAsyncLogger:
         filename: str,
         function_name: str,
         line_number: int,
-        exc_info: Optional["OptExcInfo"],
+        exc_info: Optional[BaseException] = None,
     ) -> "LogRecord":
         raise NotImplementedError
 
     @abstractmethod
     async def _log(
-        self, level: int, msg: "MessageType", exc_info: bool = False
+        self, level: int, msg: "MessageType", exc_info: Optional[BaseException] = None
     ) -> None:
         raise NotImplementedError
 
@@ -139,11 +130,7 @@ class BaseSyncLogger(BaseAsyncLogger):
         raise NotImplementedError
 
     @abstractmethod
-    def error(self, msg: "MessageType") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def exception(self, msg: "MessageType") -> None:
+    def error(self, msg: "MessageType", exc: Optional[BaseException] = None) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -151,7 +138,9 @@ class BaseSyncLogger(BaseAsyncLogger):
         raise NotImplementedError
 
     @abstractmethod
-    def _log(self, level: int, msg: "MessageType", exc_info: bool = False) -> None:
+    def _log(
+        self, level: int, msg: "MessageType", exc_info: Optional[BaseException] = None
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
