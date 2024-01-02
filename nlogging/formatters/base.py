@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class BaseFormatter:
-    # NOTE: The default datetime format follows ISO 8601
+    # NOTE: The default datetime format follows ISO 8601 using UTC time zone.
     DEFAULT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
     DEFAULT_MSEC_FORMAT = "%s.%03dZ"
 
