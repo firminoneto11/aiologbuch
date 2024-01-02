@@ -51,8 +51,7 @@ async def _close_stderr_writer():
         await _stderr_writer.drain()
         _stderr_writer.close()
         await _stderr_writer.wait_closed()
-        _stderr_writer = None
-        _closed = True
+        _stderr_writer, _closed = None, True
 
 
 class AsyncStreamHandler(BaseAsyncHandler):

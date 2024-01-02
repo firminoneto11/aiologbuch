@@ -1,4 +1,4 @@
-from functools import cache
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional
 
 from anyio import Lock
@@ -8,53 +8,57 @@ from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
     from logging import LogRecord
-    from os import PathLike
 
     from nlogging._types import LevelType
     from nlogging.formatters import BaseFormatter
 
 
-@cache
-def _file_based_lock(filename: str):
-    return Lock()
+_resource_map: dict[str, "_StreamResource"] = {}
+
+
+@dataclass
+class _StreamResource:
+    lock: Lock
+    filename: str
+    closed: bool = True
+    stream: Optional[FileWriteStream] = None
+
+    async def send(self, msg: bytes):
+        async with self.lock:
+            if not self.stream:
+                self.stream = await FileWriteStream.from_path(
+                    path=self.filename, append=True
+                )
+            await self.stream.send(msg)
+
+    async def close(self):
+        global _resource_map
+
+        _resource_map.pop(self.filename, None)
+
+        if self.stream:
+            async with self.lock:
+                await self.stream.aclose()
+                self.stream = None
 
 
 class AsyncFileHandler(BaseAsyncHandler):
-    _stream: Optional[FileWriteStream]
+    resource: _StreamResource
 
     terminator = b"\n"
 
-    @property
-    def lock(self):
-        return _file_based_lock(self._filename)
-
-    def __init__(
-        self,
-        filename: "str | PathLike[str]",
-        level: "LevelType",
-        formatter: "BaseFormatter",
-    ):
+    def __init__(self, filename: str, level: "LevelType", formatter: "BaseFormatter"):
         if not filename:
             raise ValueError("'filename' cannot be empty")
+
         super().__init__(level=level, formatter=formatter)
-        self.closed = True
-        self._filename = filename
-        self._stream = None
 
-    @property
-    def stream(self):
-        return self._stream
+        global _resource_map
 
-    @stream.setter
-    def stream(self, value: Optional[FileWriteStream]):
-        if self.is_open:
-            raise RuntimeError("Cannot change stream on open handler")
-
-        self._stream = value
-
-    @property
-    def is_open(self):
-        return bool(self.stream) and (not self.closed)
+        self.resource = _resource_map.get(filename, None)
+        if not self.resource:
+            _resource_map[filename] = _StreamResource(lock=Lock(), filename=filename)
+            self.resource = _resource_map[filename]
 
     async def emit(self, record: "LogRecord"):
         try:
@@ -64,19 +68,7 @@ class AsyncFileHandler(BaseAsyncHandler):
             await self.handle_error(record)
 
     async def write_and_flush(self, msg: bytes):
-        if not self.stream:
-            async with self.lock:
-                self.stream = await FileWriteStream.from_path(
-                    path=self._filename, append=True
-                )
-                self.closed = False
-
-        async with self.lock:
-            await self.stream.send(msg)
+        await self.resource.send(msg)
 
     async def close(self):
-        if self.is_open:
-            async with self.lock:
-                await self.stream.aclose()
-                self.closed = True
-                self.stream = None
+        await self.resource.close()
