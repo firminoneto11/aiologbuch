@@ -11,26 +11,20 @@ from nlogging.levels import LogLevel, check_level
 from .base import BaseSyncLogger
 
 if TYPE_CHECKING:
-    from _typeshed import OptExcInfo
-
     from nlogging.handlers import BaseSyncHandler
 
     from .base import CallerInfo, LevelType, MessageType
 
 
 class SyncNLogger(Filterer, BaseSyncLogger):
-    @classmethod
-    def create_logger(cls, name: str, level: "LevelType"):
-        logger = cls(name, level)
-        logger.add_handler(SyncStreamHandler(level=level, formatter=JsonFormatter()))
-        return logger
-
     def __init__(self, name: str, level: "LevelType"):
         super().__init__()
         self.name = name
         self._level = check_level(level)
         self._handlers = {}
         self.disabled = False
+
+        self.add_handler(SyncStreamHandler(level=self.level, formatter=JsonFormatter()))
 
     @property
     def level(self):
@@ -92,7 +86,7 @@ class SyncNLogger(Filterer, BaseSyncLogger):
         filename: str,
         function_name: str,
         line_number: int,
-        exc_info: Optional["OptExcInfo"],
+        exc_info: Optional[BaseException] = None,
     ):
         return LogRecord(
             name, level, filename, line_number, msg, None, exc_info, function_name
@@ -102,7 +96,7 @@ class SyncNLogger(Filterer, BaseSyncLogger):
         self,
         level: int,
         msg: "MessageType",
-        exc_info: bool = False,
+        exc_info: Optional[BaseException] = None,
     ):
         caller = self.find_caller()
 
