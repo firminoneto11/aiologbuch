@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Optional, Self
 
-from nlogging.loggers import BaseAsyncLogger
 from nlogging.utils import is_direct_subclass
+
+from .base import BaseAsyncLogger
 
 if TYPE_CHECKING:
     from nlogging._types import LevelType
@@ -17,6 +18,10 @@ class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
         if created:
             self._set_inner_logger(logger_class=logger_class)
         return self
+
+    @property
+    def lc(self):
+        return self._logger_class
 
     def _set_inner_logger(self, logger_class: LC):
         self._active_loggers = {}
@@ -36,7 +41,7 @@ class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
 
     def get_logger(self, name: str, level: "LevelType"):
         if name not in self._active_loggers:
-            self._active_loggers[name] = self._logger_class.create_logger(name, level)
+            self._active_loggers[name] = self.lc(name, level)
         (logger := self._active_loggers[name]).level = level
         return logger
 
