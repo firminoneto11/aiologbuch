@@ -57,8 +57,6 @@ async def _close_stderr_writer():
 class AsyncStreamHandler(BaseAsyncHandler):
     _writer: Optional[StreamWriter]
 
-    terminator = b"\n"
-
     @property
     def lock(self):
         global _stderr_lock
@@ -85,8 +83,6 @@ class AsyncStreamHandler(BaseAsyncHandler):
 
 
 class SyncStreamHandler(BaseSyncHandler):
-    terminator = b"\n"
-
     def __init__(self, level: "LevelType", formatter: "BaseFormatter"):
         super().__init__(level=level, formatter=formatter)
 

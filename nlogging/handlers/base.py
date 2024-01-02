@@ -26,6 +26,7 @@ def _handler_id_generator():
 
 class BaseAsyncHandler(Filterer):
     _formatter: Optional[BaseFormatter]
+    terminator = b"\n"
 
     def __init__(self, level: "LevelType", formatter: BaseFormatter):
         super().__init__()
@@ -83,6 +84,7 @@ class BaseAsyncHandler(Filterer):
 
 class BaseSyncHandler(Filterer):
     _formatter: Optional[BaseFormatter]
+    terminator = b"\n"
 
     def __init__(self, level: "LevelType", formatter: BaseFormatter):
         super().__init__()
