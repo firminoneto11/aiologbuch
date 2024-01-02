@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from nlogging.formatters import BaseFormatter
 
 
+_map_write_lock = Lock()
 _resource_map: dict[str, "_StreamResource"] = {}
 
 
@@ -23,17 +24,27 @@ class _StreamResource:
     stream: Optional[FileWriteStream] = None
 
     async def send(self, msg: bytes):
+        global _resource_map
+        global _map_write_lock
+
         async with self.lock:
             if not self.stream:
                 self.stream = await FileWriteStream.from_path(
                     path=self.filename, append=True
                 )
+
+                async with _map_write_lock:
+                    _resource_map[self.filename] = self
+
             await self.stream.send(msg)
 
     async def close(self):
         global _resource_map
+        global _map_write_lock
 
-        _resource_map.pop(self.filename, None)
+        if self.filename in _resource_map:
+            async with _map_write_lock:
+                _resource_map.pop(self.filename)
 
         if self.stream:
             async with self.lock:
@@ -54,10 +65,10 @@ class AsyncFileHandler(BaseAsyncHandler):
 
         global _resource_map
 
-        self.resource = _resource_map.get(filename, None)
-        if not self.resource:
-            _resource_map[filename] = _StreamResource(lock=Lock(), filename=filename)
-            self.resource = _resource_map[filename]
+        if _resource_map.get(filename):
+            raise ValueError(f"'{filename}' is already being used by another handler")
+
+        self.resource = _StreamResource(lock=Lock(), filename=filename)
 
     async def emit(self, record: "LogRecord"):
         try:
