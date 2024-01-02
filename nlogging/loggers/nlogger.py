@@ -1,7 +1,9 @@
 from inspect import stack
 from logging import LogRecord
-from sys import exc_info as get_exc_info
+from traceback import format_exception
 from typing import TYPE_CHECKING, Optional
+
+from anyio import create_task_group
 
 from nlogging.filters import Filterer
 from nlogging.formatters import JsonFormatter
@@ -11,26 +13,22 @@ from nlogging.levels import LogLevel, check_level
 from .base import BaseAsyncLogger
 
 if TYPE_CHECKING:
-    from _typeshed import OptExcInfo
-
     from nlogging.handlers import BaseAsyncHandler
 
     from .base import CallerInfo, LevelType, MessageType
 
 
 class NLogger(Filterer, BaseAsyncLogger):
-    @classmethod
-    def create_logger(cls, name: str, level: "LevelType"):
-        logger = cls(name, level)
-        logger.add_handler(AsyncStreamHandler(level=level, formatter=JsonFormatter()))
-        return logger
-
     def __init__(self, name: str, level: "LevelType"):
         super().__init__()
         self.name = name
         self._level = check_level(level)
         self._handlers = {}
         self.disabled = False
+
+        self.add_handler(
+            AsyncStreamHandler(level=self.level, formatter=JsonFormatter())
+        )
 
     @property
     def level(self):
@@ -64,13 +62,9 @@ class NLogger(Filterer, BaseAsyncLogger):
         if self.is_enabled_for(LogLevel.WARNING):
             await self._log(LogLevel.WARNING, msg)
 
-    async def error(self, msg: "MessageType"):
+    async def error(self, msg: "MessageType", exc: Optional[BaseException] = None):
         if self.is_enabled_for(LogLevel.ERROR):
-            await self._log(LogLevel.ERROR, msg)
-
-    async def exception(self, msg: "MessageType"):
-        if self.is_enabled_for(LogLevel.ERROR):
-            await self._log(LogLevel.ERROR, msg, exc_info=True)
+            await self._log(LogLevel.ERROR, msg, exc_info=exc)
 
     async def critical(self, msg: "MessageType"):
         if self.is_enabled_for(LogLevel.CRITICAL):
@@ -92,17 +86,28 @@ class NLogger(Filterer, BaseAsyncLogger):
         filename: str,
         function_name: str,
         line_number: int,
-        exc_info: Optional["OptExcInfo"],
+        exc_info: Optional[BaseException] = None,
     ):
-        return LogRecord(
-            name, level, filename, line_number, msg, None, exc_info, function_name
+        if exc_info:
+            info = (type(exc_info), exc_info, exc_info.__traceback__)
+            text = "".join(format_exception(exc_info, limit=None, chain=True))
+        else:
+            info, text = None, None
+
+        record = LogRecord(
+            name, level, filename, line_number, msg, None, info, function_name
         )
+
+        if text:
+            record.exc_text = text
+
+        return record
 
     async def _log(
         self,
         level: int,
         msg: "MessageType",
-        exc_info: bool = False,
+        exc_info: Optional[BaseException] = None,
     ):
         caller = self.find_caller()
 
@@ -113,7 +118,7 @@ class NLogger(Filterer, BaseAsyncLogger):
             filename=caller["caller_filename"],
             function_name=caller["caller_function_name"],
             line_number=caller["caller_line_number"],
-            exc_info=get_exc_info() if exc_info else None,
+            exc_info=exc_info,
         )
 
         await self.handle(record)
@@ -136,9 +141,10 @@ class NLogger(Filterer, BaseAsyncLogger):
         if not self.has_handlers():
             raise ValueError("No handlers found for the logger")
 
-        for handler in self.handlers.values():
-            if record.levelno >= handler.level:
-                await handler.handle(record)
+        async with create_task_group() as tg:
+            for handler in self.handlers.values():
+                if record.levelno >= handler.level:
+                    tg.start_soon(handler.handle, record)
 
     def is_enabled_for(self, level: int):
         if self.disabled:
