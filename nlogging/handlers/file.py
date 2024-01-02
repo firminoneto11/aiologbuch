@@ -7,8 +7,6 @@ from anyio.streams.file import FileWriteStream
 from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from logging import LogRecord
-
     from nlogging._types import LevelType
     from nlogging.formatters import BaseFormatter
 
@@ -43,13 +41,11 @@ class _StreamResource:
 
 @dataclass
 class _ResourceManager:
-    _lock = None
+    _lock = Lock()
     _map: dict[str, "MapType"] = None
 
     @property
     def lock(self):
-        if not self._lock:
-            self._lock = Lock()
         return self._lock
 
     @property
@@ -91,6 +87,7 @@ class _ResourceManager:
 
 class AsyncFileHandler(BaseAsyncHandler):
     should_request_resource = True
+    _manager = _ResourceManager()
     _filename: str
 
     def __init__(self, filename: str, level: "LevelType", formatter: "BaseFormatter"):
@@ -103,27 +100,17 @@ class AsyncFileHandler(BaseAsyncHandler):
     def filename(self):
         return self._filename
 
-    async def emit(self, record: "LogRecord"):
-        try:
-            msg = self.format(record) + self.terminator
-            await self.write_and_flush(msg)
-        except:  # noqa
-            await self.handle_error(record)
+    @property
+    def manager(self):
+        return self._manager
 
     async def write_and_flush(self, msg: bytes):
-        global manager
-
         if self.should_request_resource:
-            await manager.request_resource(self.filename)
+            await self.manager.request_resource(self.filename)
             self.should_request_resource = False
 
-        await manager.send_message(self.filename, msg)
+        await self.manager.send_message(self.filename, msg)
 
     async def close(self):
-        global manager
-
-        await manager.close_resource(self.filename)
+        await self.manager.close_resource(self.filename)
         self.should_request_resource = True
-
-
-manager = _ResourceManager()
