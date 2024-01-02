@@ -1,102 +1,73 @@
 from asyncio import StreamWriter, get_running_loop
+from dataclasses import dataclass
 from sys import stderr
-from typing import TYPE_CHECKING, Optional
-
-from anyio import Lock
+from typing import TYPE_CHECKING
 
 from nlogging.protocols import AIOProtocol
 
-if TYPE_CHECKING:
-    from logging import LogRecord
+from .base import BaseAsyncHandler, get_stderr_lock
 
+if TYPE_CHECKING:
     from nlogging._types import LevelType
     from nlogging.formatters import BaseFormatter
 
-from .base import BaseAsyncHandler, BaseSyncHandler
 
-_stderr_writer = None
-_stderr_lock = Lock()
-_closed = False
+@dataclass
+class _ResourceManager:
+    _stderr_writer = None
+    _closed = False
 
-
-async def _get_stderr_writer():
-    global _stderr_writer
-    global _stderr_lock
-    global _closed
-
-    if _closed:
-        raise RuntimeError("Writer was closed")
-
-    loop = get_running_loop()
-
-    if not _stderr_writer:
-        async with _stderr_lock:
-            transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
-            _stderr_writer = StreamWriter(
-                transport=transport, protocol=protocol, reader=None, loop=loop
-            )
-
-    return _stderr_writer
-
-
-async def _close_stderr_writer():
-    global _stderr_writer
-    global _stderr_lock
-    global _closed
-
-    if (_closed) or (not _stderr_writer):
-        return
-
-    async with _stderr_lock:
-        await _stderr_writer.drain()
-        _stderr_writer.close()
-        await _stderr_writer.wait_closed()
-        _stderr_writer, _closed = None, True
-
-
-class AsyncStreamHandler(BaseAsyncHandler):
-    _writer: Optional[StreamWriter]
+    @property
+    def closed(self):
+        return self._closed
 
     @property
     def lock(self):
-        global _stderr_lock
-        return _stderr_lock
+        return get_stderr_lock()
 
-    def __init__(self, level: "LevelType", formatter: "BaseFormatter"):
-        super().__init__(level=level, formatter=formatter)
-
-    async def emit(self, record: "LogRecord"):
-        try:
-            msg = self.format(record) + self.terminator
-            await self.write_and_flush(msg)
-        except:  # noqa
-            await self.handle_error(record)
-
-    async def write_and_flush(self, msg: bytes):
-        writer = await _get_stderr_writer()
+    async def send_message(self, msg: bytes):
         async with self.lock:
-            writer.write(msg)
-            await writer.drain()
+            if self.closed:
+                raise RuntimeError("Writer was closed")
+
+            if not self._stderr_writer:
+                loop = get_running_loop()
+                transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
+                self._stderr_writer = StreamWriter(
+                    transport=transport, protocol=protocol, reader=None, loop=loop
+                )
+
+            self._stderr_writer.write(msg)
+            await self._stderr_writer.drain()
 
     async def close(self):
-        pass
+        # TODO: Should we hook this method with process signals?
+        async with self.lock:
+            if (self.closed) or (not self._stderr_writer):
+                return
+
+            self._stderr_writer.write(b"Closing stderr...")
+            await self._stderr_writer.drain()
+
+            self._stderr_writer.close()
+            await self._stderr_writer.wait_closed()
+            self._stderr_writer, self._closed = None, True
 
 
-class SyncStreamHandler(BaseSyncHandler):
+class AsyncStreamHandler(BaseAsyncHandler):
+    _manager = _ResourceManager()
+
     def __init__(self, level: "LevelType", formatter: "BaseFormatter"):
         super().__init__(level=level, formatter=formatter)
 
-    def emit(self, record: "LogRecord"):
-        try:
-            msg = self.format(record) + self.terminator
-            self.write_and_flush(msg)
-        except:  # noqa
-            self.handle_error(record)
+    @property
+    def manager(self):
+        return self._manager
 
-    def write_and_flush(self, msg: bytes):
-        with self.lock:
-            stderr.write(msg.decode())
-            stderr.flush()
+    async def write_and_flush(self, msg: bytes):
+        await self.manager.send_message(msg)
 
-    def close(self):
+    async def close(self):
+        # NOTE: If we close the StreamWriter bound to sys.stderr, nothing else would be
+        # able to use sys.stderr it again. So we just pass for now.
         pass
