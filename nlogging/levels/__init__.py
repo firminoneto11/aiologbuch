@@ -34,7 +34,7 @@ def check_level(level: "LevelType"):
         return level
     elif isinstance(level, str):
         try:
-            return NAME_TO_LEVEL[level]
+            return NAME_TO_LEVEL[level.upper().strip()]
         except KeyError:
             raise ValueError(f"Unknown level: {level}")
     else:
