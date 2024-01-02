@@ -2,6 +2,7 @@ from functools import lru_cache
 from logging import Handler
 from typing import TYPE_CHECKING, Optional
 
+from anyio import Lock
 from anyio.to_thread import run_sync
 
 from nlogging.filters import Filterer
@@ -24,23 +25,24 @@ def _handler_id_generator():
         i += 1
 
 
+@lru_cache(maxsize=1)
+def get_stderr_lock():
+    return Lock()
+
+
 class BaseAsyncHandler(Filterer):
     _formatter: Optional[BaseFormatter]
     terminator = b"\n"
 
     def __init__(self, level: "LevelType", formatter: BaseFormatter):
         super().__init__()
-        self.level = level
-        self.formatter = formatter
         self._id = next(_handler_id_generator())
+        self.formatter = formatter
+        self.level = level
 
     @property
-    def level(self) -> int:
-        return self._level
-
-    @level.setter
-    def level(self, value: "LevelType"):
-        self._level = check_level(value)
+    def id(self):
+        return self._id
 
     @property
     def formatter(self):
@@ -53,15 +55,24 @@ class BaseAsyncHandler(Filterer):
         self._formatter = value
 
     @property
-    def lock(self):
-        raise NotImplementedError("'lock' must be implemented by Handler subclasses")
+    def level(self):
+        return self._level
 
-    @property
-    def id(self):
-        return self._id
+    @level.setter
+    def level(self, value: "LevelType"):
+        self._level = check_level(value)
 
-    async def emit(self, record: "LogRecord") -> None:
-        raise NotImplementedError("'emit' must be implemented by Handler subclasses")
+    async def emit(self, record: "LogRecord"):
+        try:
+            msg = self.format(record) + self.terminator
+            await self.write_and_flush(msg)
+        except:  # noqa
+            await self.handle_error(record)
+
+    async def write_and_flush(self, msg: bytes) -> None:
+        raise NotImplementedError(
+            "'write_and_flush' must be implemented by Handler subclasses"
+        )
 
     async def close(self) -> None:
         raise NotImplementedError("'close' must be implemented by Handler subclasses")
@@ -78,62 +89,5 @@ class BaseAsyncHandler(Filterer):
 
     async def handle_error(self, record: "LogRecord"):
         if RAISE_EXCEPTIONS:
-            async with self.lock:
+            async with get_stderr_lock():
                 await run_sync(Handler.handleError, None, record)
-
-
-class BaseSyncHandler(Filterer):
-    _formatter: Optional[BaseFormatter]
-    terminator = b"\n"
-
-    def __init__(self, level: "LevelType", formatter: BaseFormatter):
-        super().__init__()
-        self.level = level
-        self.formatter = formatter
-        self._id = next(_handler_id_generator())
-
-    @property
-    def level(self) -> int:
-        return self._level
-
-    @level.setter
-    def level(self, value: "LevelType"):
-        self._level = check_level(value)
-
-    @property
-    def formatter(self):
-        return self._formatter
-
-    @formatter.setter
-    def formatter(self, value: BaseFormatter):
-        if not is_direct_subclass(value=value, base_cls=BaseFormatter):
-            raise TypeError("'formatter' must be a subclass of BaseFormatter")
-        self._formatter = value
-
-    @property
-    def lock(self):
-        raise NotImplementedError("'lock' must be implemented by Handler subclasses")
-
-    @property
-    def id(self):
-        return self._id
-
-    def emit(self, record: "LogRecord") -> None:
-        raise NotImplementedError("'emit' must be implemented by Handler subclasses")
-
-    def close(self) -> None:
-        raise NotImplementedError("'close' must be implemented by Handler subclasses")
-
-    def format(self, record: "LogRecord"):
-        if not self.formatter:
-            raise TypeError("No formatter found")
-        return self.formatter.format(record)
-
-    def handle(self, record: "LogRecord"):
-        if rv := self.filter(record):
-            self.emit(record)
-        return rv
-
-    def handle_error(self, record: "LogRecord"):
-        if RAISE_EXCEPTIONS:
-            Handler.handleError(None, record)
