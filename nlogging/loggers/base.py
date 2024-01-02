@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from logging import LogRecord
 
     from nlogging._types import CallerInfo, LevelType, MessageType
-    from nlogging.handlers import BaseAsyncHandler, BaseSyncHandler
+    from nlogging.handlers import BaseAsyncHandler
 
 
 class BaseAsyncLogger:
@@ -111,46 +111,4 @@ class BaseAsyncLogger:
 
     @abstractmethod
     async def disable(self) -> None:
-        raise NotImplementedError
-
-
-class BaseSyncLogger(BaseAsyncLogger):
-    _handlers: dict[int, "BaseSyncHandler"]
-
-    @abstractmethod
-    def debug(self, msg: "MessageType") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def info(self, msg: "MessageType") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def warning(self, msg: "MessageType") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def error(self, msg: "MessageType", exc: Optional[BaseException] = None) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def critical(self, msg: "MessageType") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def _log(
-        self, level: int, msg: "MessageType", exc_info: Optional[BaseException] = None
-    ) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def handle(self, record: "LogRecord") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def call_handlers(self, record: "LogRecord") -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    def disable(self) -> None:
         raise NotImplementedError
