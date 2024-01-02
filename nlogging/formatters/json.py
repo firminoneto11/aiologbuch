@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from logging import LogRecord
 
 
-# NOTE: orjson is optional, but it's faster than json
+# NOTE: orjson is optional, but it's faster than stdlib json
 try:
     import orjson as json
 except ImportError:
@@ -27,4 +27,8 @@ class JsonFormatter(BaseFormatter):
             "line_number": record.lineno,
             "message": record.getMessage(),
         }
+
+        if record.exc_text:
+            log_data["exception"] = record.exc_text
+
         return self._ensure_bytes(log=json.dumps(log_data))
