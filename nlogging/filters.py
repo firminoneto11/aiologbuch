@@ -1,12 +1,15 @@
 from dataclasses import dataclass
-from logging import LogRecord
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from logging import LogRecord
 
 
 @dataclass
 class Filter:
     level: int
 
-    def filter(self, record: LogRecord):
+    def filter(self, record: "LogRecord"):
         return record.levelno >= self.level
 
 
@@ -14,5 +17,5 @@ class Filter:
 class ExclusiveFilter:
     level: int
 
-    def filter(self, record: LogRecord):
+    def filter(self, record: "LogRecord"):
         return record.levelno == self.level

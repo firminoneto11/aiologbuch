@@ -1,6 +1,6 @@
 from ._types import LevelType
 from .formatters import JsonFormatter
-from .handlers import AsyncFileHandler
+from .handlers import AsyncFileHandler, AsyncStreamHandler
 from .loggers import AsyncLoggerManagerSingleton, NLogger
 from .settings import ROOT_LOGGER_NAME
 
@@ -21,7 +21,10 @@ def get_logger(
     :return: A NLogger instance.
     """
     manager = AsyncLoggerManagerSingleton[NLogger](logger_class=NLogger)
-    logger = manager.get_logger(name=name, level=level)
+    logger, created = manager.get_logger(name=name, level=level)
+
+    if created:
+        logger._add_handler(AsyncStreamHandler(level=level, formatter=JsonFormatter()))
 
     if filename:
         logger._add_handler(

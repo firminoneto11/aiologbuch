@@ -5,26 +5,21 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from nlogging.formatters import JsonFormatter
-from nlogging.handlers import AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
 from nlogging.loggers.base import BaseAsyncLogger
 
 if TYPE_CHECKING:
-    from nlogging._types import CallerInfo, LevelType, MessageType
-    from nlogging.handlers import BaseAsyncHandler
+    from nlogging._types import AsyncHandlerProtocol, CallerInfo, LevelType, MessageType
 
 
 class NLogger(BaseAsyncLogger):
+    _handlers: dict[int, "AsyncHandlerProtocol"]
+
     def __init__(self, name: str, level: "LevelType"):
         self.name = name
         self.level = check_level(level)
         self._handlers = {}
         self._disabled = False
-
-        self._add_handler(
-            AsyncStreamHandler(level=self.level, formatter=JsonFormatter())
-        )
 
     @property
     def level(self):
@@ -67,7 +62,7 @@ class NLogger(BaseAsyncLogger):
             await self._log(LogLevel.CRITICAL, msg)
 
     def _find_caller(self) -> "CallerInfo":
-        frame = stack()[3]  # Up 3 frames from this one is the original caller
+        frame = stack()[3]  # 3 frames up from this one is the original caller
         return {
             "caller_filename": frame.filename,
             "caller_function_name": frame.function,
@@ -122,11 +117,11 @@ class NLogger(BaseAsyncLogger):
     async def _handle(self, record: LogRecord):
         await self._call_handlers(record)
 
-    def _add_handler(self, handler: "BaseAsyncHandler"):
+    def _add_handler(self, handler: "AsyncHandlerProtocol"):
         if handler.id not in self._handlers:
             self._handlers[handler.id] = handler
 
-    def _remove_handler(self, handler: "BaseAsyncHandler"):
+    def _remove_handler(self, handler: "AsyncHandlerProtocol"):
         self._handlers.pop(handler.id, None)
 
     def _has_handlers(self):

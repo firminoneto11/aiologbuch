@@ -7,18 +7,7 @@ from anyio.streams.file import FileWriteStream
 from nlogging.handlers.base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from logging import LogRecord
-    from typing import Protocol, TypedDict
-
-    from nlogging._types import LevelType
-
-    class MapType(TypedDict):
-        resource: "_StreamResource"
-        reference_count: int
-
-    class FormatterProtocol(Protocol):
-        def format(self, record: LogRecord) -> bytes:
-            ...
+    from nlogging._types import FormatterProtocol, LevelType, MapType
 
 
 @dataclass

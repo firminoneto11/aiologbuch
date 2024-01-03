@@ -11,13 +11,8 @@ from nlogging.settings import RAISE_EXCEPTIONS
 
 if TYPE_CHECKING:
     from logging import LogRecord
-    from typing import Protocol
 
-    from nlogging._types import LevelType
-
-    class FormatterProtocol(Protocol):
-        def format(self, record: "LogRecord") -> bytes:
-            ...
+    from nlogging._types import FormatterProtocol, LevelType
 
 
 @lru_cache(maxsize=1)

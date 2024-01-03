@@ -4,13 +4,10 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from logging import LogRecord
 
-    from nlogging._types import CallerInfo, LevelType, MessageType
-    from nlogging.handlers import BaseAsyncHandler
+    from nlogging._types import AsyncHandlerProtocol, CallerInfo, LevelType, MessageType
 
 
 class BaseAsyncLogger(ABC):
-    _handlers: dict[int, "BaseAsyncHandler"]
-
     @abstractmethod
     def __init__(self, name: str, level: "LevelType") -> None:
         ...
@@ -79,11 +76,11 @@ class BaseAsyncLogger(ABC):
         ...
 
     @abstractmethod
-    def _add_handler(self, handler: "BaseAsyncHandler") -> None:
+    def _add_handler(self, handler: "AsyncHandlerProtocol") -> None:
         ...
 
     @abstractmethod
-    def _remove_handler(self, handler: "BaseAsyncHandler") -> None:
+    def _remove_handler(self, handler: "AsyncHandlerProtocol") -> None:
         ...
 
     @abstractmethod

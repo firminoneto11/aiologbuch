@@ -7,8 +7,7 @@ from nlogging.handlers.base import BaseAsyncHandler, get_stderr_lock
 from nlogging.protocols import AIOProtocol
 
 if TYPE_CHECKING:
-    from nlogging._types import LevelType
-    from nlogging.formatters import BaseFormatter
+    from nlogging._types import FormatterProtocol, LevelType
 
 
 @dataclass
@@ -56,7 +55,7 @@ class _ResourceManager:
 class AsyncStreamHandler(BaseAsyncHandler):
     _manager = _ResourceManager()
 
-    def __init__(self, level: "LevelType", formatter: "BaseFormatter"):
+    def __init__(self, level: "LevelType", formatter: "FormatterProtocol"):
         super().__init__(level=level, formatter=formatter)
 
     @property
