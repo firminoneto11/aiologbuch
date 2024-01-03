@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
@@ -8,62 +8,55 @@ if TYPE_CHECKING:
     from nlogging.handlers import BaseAsyncHandler
 
 
-class BaseAsyncLogger:
-    __metaclass__ = ABCMeta
-
+class BaseAsyncLogger(ABC):
     _handlers: dict[int, "BaseAsyncHandler"]
 
     @abstractmethod
     def __init__(self, name: str, level: "LevelType") -> None:
-        raise NotImplementedError
+        ...
 
     @property
     @abstractmethod
     def level(self) -> int:
-        raise NotImplementedError
+        ...
 
     @level.setter
     @abstractmethod
     def level(self, value: "LevelType") -> None:
-        raise NotImplementedError
+        ...
 
     @property
-    @abstractmethod
-    def handlers(self) -> dict[str, "BaseAsyncHandler"]:
-        raise NotImplementedError
-
-    @property
-    def mem_addr(self) -> str:
-        raise NotImplementedError
+    def _mem_addr(self) -> str:
+        ...
 
     @abstractmethod
     async def debug(self, msg: "MessageType") -> None:
-        raise NotImplementedError
+        ...
 
     @abstractmethod
     async def info(self, msg: "MessageType") -> None:
-        raise NotImplementedError
+        ...
 
     @abstractmethod
     async def warning(self, msg: "MessageType") -> None:
-        raise NotImplementedError
+        ...
 
     @abstractmethod
     async def error(
         self, msg: "MessageType", exc: Optional[BaseException] = None
     ) -> None:
-        raise NotImplementedError
+        ...
 
     @abstractmethod
     async def critical(self, msg: "MessageType") -> None:
-        raise NotImplementedError
+        ...
 
     @abstractmethod
-    def find_caller(self) -> "CallerInfo":
-        raise NotImplementedError
+    def _find_caller(self) -> "CallerInfo":
+        ...
 
     @abstractmethod
-    def make_record(
+    def _make_record(
         self,
         name: str,
         level: int,
@@ -73,42 +66,38 @@ class BaseAsyncLogger:
         line_number: int,
         exc_info: Optional[BaseException] = None,
     ) -> "LogRecord":
-        raise NotImplementedError
+        ...
 
     @abstractmethod
     async def _log(
         self, level: int, msg: "MessageType", exc_info: Optional[BaseException] = None
     ) -> None:
-        raise NotImplementedError
+        ...
 
     @abstractmethod
-    async def handle(self, record: "LogRecord") -> None:
-        raise NotImplementedError
+    async def _handle(self, record: "LogRecord") -> None:
+        ...
 
     @abstractmethod
-    def add_handler(self, handler: "BaseAsyncHandler") -> None:
-        raise NotImplementedError
+    def _add_handler(self, handler: "BaseAsyncHandler") -> None:
+        ...
 
     @abstractmethod
-    def remove_handler(self, handler: "BaseAsyncHandler") -> None:
-        raise NotImplementedError
+    def _remove_handler(self, handler: "BaseAsyncHandler") -> None:
+        ...
 
     @abstractmethod
-    def has_handlers(self) -> bool:
-        raise NotImplementedError
+    def _has_handlers(self) -> bool:
+        ...
 
     @abstractmethod
-    async def call_handlers(self, record: "LogRecord") -> None:
-        raise NotImplementedError
+    async def _call_handlers(self, record: "LogRecord") -> None:
+        ...
 
     @abstractmethod
-    def is_enabled_for(self, level: int) -> bool:
-        raise NotImplementedError
+    def _is_enabled_for(self, level: int) -> bool:
+        ...
 
     @abstractmethod
-    def update_handlers_level(self) -> None:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def disable(self) -> None:
-        raise NotImplementedError
+    async def _disable(self) -> None:
+        ...
