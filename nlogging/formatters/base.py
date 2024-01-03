@@ -1,9 +1,6 @@
 from datetime import datetime, timezone
+from logging import LogRecord
 from time import strftime
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from logging import LogRecord
 
 
 class BaseFormatter:
@@ -14,10 +11,10 @@ class BaseFormatter:
     def converter(self, secs: float):
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
 
-    def format(self, record: "LogRecord") -> bytes:
+    def format(self, record: LogRecord) -> bytes:
         raise NotImplementedError("format() must be implemented in subclass")
 
-    def format_time(self, record: "LogRecord"):
+    def format_time(self, record: LogRecord):
         timestamp = strftime(self.DEFAULT_DATE_FORMAT, self.converter(record.created))
         return self.DEFAULT_MSEC_FORMAT % (timestamp, record.msecs)
 
