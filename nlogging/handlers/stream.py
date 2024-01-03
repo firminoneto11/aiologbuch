@@ -1,13 +1,22 @@
-from asyncio import StreamWriter, get_running_loop
+from asyncio import StreamWriter, get_running_loop, sleep
+from asyncio.protocols import Protocol
 from dataclasses import dataclass
 from sys import stderr
 from typing import TYPE_CHECKING
 
 from nlogging.handlers.base import BaseAsyncHandler, get_stderr_lock
-from nlogging.protocols import AIOProtocol
 
 if TYPE_CHECKING:
     from nlogging._types import FormatterProtocol, LevelType
+
+
+class _AIOProto(Protocol):
+    async def _drain_helper(self):
+        ...
+
+    async def _get_close_waiter(self, transport: StreamWriter):
+        while transport.transport._pipe is not None:
+            await sleep(0)  # Skips one event loop iteration
 
 
 @dataclass
@@ -30,7 +39,7 @@ class _ResourceManager:
 
             if not self._stderr_writer:
                 loop = get_running_loop()
-                transport, protocol = await loop.connect_write_pipe(AIOProtocol, stderr)
+                transport, protocol = await loop.connect_write_pipe(_AIOProto, stderr)
                 self._stderr_writer = StreamWriter(
                     transport=transport, protocol=protocol, reader=None, loop=loop
                 )

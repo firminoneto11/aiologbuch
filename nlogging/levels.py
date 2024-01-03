@@ -12,19 +12,11 @@ class LogLevel(IntEnum):
     WARNING = logging.WARNING
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
-    NOTSET = logging.NOTSET
 
 
 NAME_TO_LEVEL = {level: LogLevel[level].value for level in LogLevel.__members__}
 
 LEVEL_TO_NAME = {level.value: level.name for level in LogLevel}
-
-
-def get_level_name(level: int):
-    try:
-        return LEVEL_TO_NAME[level]
-    except KeyError as exc:
-        raise ValueError(f"Unknown level name: {level}") from exc
 
 
 def check_level(level: "LevelType"):

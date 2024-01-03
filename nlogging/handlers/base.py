@@ -6,7 +6,6 @@ from anyio import Lock
 from anyio.to_thread import run_sync
 
 from nlogging.filters import Filter
-from nlogging.levels import check_level
 from nlogging.settings import RAISE_EXCEPTIONS
 
 if TYPE_CHECKING:
@@ -33,21 +32,19 @@ class BaseAsyncHandler:
 
     def __init__(self, level: "LevelType", formatter: "FormatterProtocol"):
         self._id = next(_handler_id_generator())
+        self._filter = Filter(level=level)
         self.formatter = formatter
-        self.level = level
 
     @property
     def id(self):
         return self._id
 
     @property
-    def level(self):
-        return self._level
+    def filter(self):
+        return self._filter
 
-    @level.setter
-    def level(self, value: "LevelType"):
-        self._level = check_level(value)
-        self.filter = Filter(level=self.level)
+    def set_level(self, level: "LevelType"):
+        self.filter.level = level
 
     async def emit(self, record: "LogRecord"):
         try:

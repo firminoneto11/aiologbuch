@@ -17,7 +17,7 @@ class NLogger(BaseAsyncLogger):
 
     def __init__(self, name: str, level: "LevelType"):
         self.name = name
-        self.level = check_level(level)
+        self.level = level
         self._handlers = {}
         self._disabled = False
 
@@ -35,7 +35,7 @@ class NLogger(BaseAsyncLogger):
 
         if should_update_handlers:
             for handler in self._handlers.values():
-                handler.level = self.level
+                handler.set_level(self.level)
 
     @property
     def _mem_addr(self):

@@ -8,6 +8,11 @@ class CallerInfo(TypedDict):
     caller_line_number: int
 
 
+class MapType(TypedDict):
+    resource: "_ResourceProtocol"
+    reference_count: int
+
+
 class LoggerProtocol(Protocol):
     def __call__(self, name: str, level: "LevelType") -> Self:
         ...
@@ -29,14 +34,11 @@ class _ResourceProtocol(Protocol):
         ...
 
 
-class MapType(TypedDict):
-    resource: "_ResourceProtocol"
-    reference_count: int
-
-
 class AsyncHandlerProtocol(Protocol):
     id: int
-    level: int
+
+    def set_level(self, level: "LevelType") -> None:
+        ...
 
     async def close(self) -> None:
         ...
