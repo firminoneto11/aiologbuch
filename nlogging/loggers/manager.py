@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING, Optional, Self
+from typing import Optional, Protocol, Self
 
-from nlogging.utils import is_direct_subclass
-
-from .base import BaseAsyncLogger
-
-if TYPE_CHECKING:
-    from nlogging._types import LevelType
+from nlogging._types import LevelType
 
 
-class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
+class LoggerProtocol(Protocol):
+    def __call__(self, name: str, level: LevelType) -> Self:
+        ...
+
+
+class AsyncLoggerManagerSingleton[LC: LoggerProtocol]:
     _instance: Optional[Self] = None
     _active_loggers: dict[str, LC]
     _logger_class: LC
@@ -25,10 +25,6 @@ class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
 
     def _set_inner_logger(self, logger_class: LC):
         self._active_loggers = {}
-        if not is_direct_subclass(value=logger_class, base_cls=BaseAsyncLogger):
-            raise TypeError(
-                f"'logger_class' must be a {BaseAsyncLogger.__name__} subclass"
-            )
         self._logger_class = logger_class
 
     @classmethod
@@ -39,7 +35,7 @@ class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
             created = True
         return cls._instance, created
 
-    def get_logger(self, name: str, level: "LevelType"):
+    def get_logger(self, name: str, level: LevelType):
         if name not in self._active_loggers:
             self._active_loggers[name] = self.lc(name, level)
         (logger := self._active_loggers[name]).level = level
