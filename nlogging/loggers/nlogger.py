@@ -5,28 +5,25 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from nlogging.filters import Filterer
+from nlogging.filters import Filter
 from nlogging.formatters import JsonFormatter
 from nlogging.handlers import AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
-
-from .base import BaseAsyncLogger
+from nlogging.loggers.base import BaseAsyncLogger
 
 if TYPE_CHECKING:
+    from nlogging._types import CallerInfo, LevelType, MessageType
     from nlogging.handlers import BaseAsyncHandler
 
-    from .base import CallerInfo, LevelType, MessageType
 
-
-class NLogger(Filterer, BaseAsyncLogger):
+class NLogger(BaseAsyncLogger):
     def __init__(self, name: str, level: "LevelType"):
-        super().__init__()
         self.name = name
-        self._level = check_level(level)
+        self.level = check_level(level)
         self._handlers = {}
-        self.disabled = False
+        self._disabled = False
 
-        self.add_handler(
+        self._add_handler(
             AsyncStreamHandler(level=self.level, formatter=JsonFormatter())
         )
 
@@ -36,41 +33,42 @@ class NLogger(Filterer, BaseAsyncLogger):
 
     @level.setter
     def level(self, value: "LevelType"):
-        should_update_handlers = self.level != value
+        should_update_handlers = False
+        if getattr(self, "_level", None) is not None:
+            should_update_handlers = value != self._level
+
         self._level = check_level(value)
+        self._filter = Filter(level=self.level)
 
         if should_update_handlers:
-            self.update_handlers_level()
+            for handler in self._handlers.values():
+                handler.level = self.level
 
     @property
-    def handlers(self):
-        return self._handlers
-
-    @property
-    def mem_addr(self):
+    def _mem_addr(self):
         return hex(id(self))
 
     async def debug(self, msg: "MessageType"):
-        if self.is_enabled_for(LogLevel.DEBUG):
+        if self._is_enabled_for(LogLevel.DEBUG):
             await self._log(LogLevel.DEBUG, msg)
 
     async def info(self, msg: "MessageType"):
-        if self.is_enabled_for(LogLevel.INFO):
+        if self._is_enabled_for(LogLevel.INFO):
             await self._log(LogLevel.INFO, msg)
 
     async def warning(self, msg: "MessageType"):
-        if self.is_enabled_for(LogLevel.WARNING):
+        if self._is_enabled_for(LogLevel.WARNING):
             await self._log(LogLevel.WARNING, msg)
 
     async def error(self, msg: "MessageType", exc: Optional[BaseException] = None):
-        if self.is_enabled_for(LogLevel.ERROR):
+        if self._is_enabled_for(LogLevel.ERROR):
             await self._log(LogLevel.ERROR, msg, exc_info=exc)
 
     async def critical(self, msg: "MessageType"):
-        if self.is_enabled_for(LogLevel.CRITICAL):
+        if self._is_enabled_for(LogLevel.CRITICAL):
             await self._log(LogLevel.CRITICAL, msg)
 
-    def find_caller(self) -> "CallerInfo":
+    def _find_caller(self) -> "CallerInfo":
         frame = stack()[3]  # Up 3 frames from this one is the original caller
         return {
             "caller_filename": frame.filename,
@@ -78,7 +76,7 @@ class NLogger(Filterer, BaseAsyncLogger):
             "caller_line_number": frame.lineno,
         }
 
-    def make_record(
+    def _make_record(
         self,
         name: str,
         level: int,
@@ -109,9 +107,9 @@ class NLogger(Filterer, BaseAsyncLogger):
         msg: "MessageType",
         exc_info: Optional[BaseException] = None,
     ):
-        caller = self.find_caller()
+        caller = self._find_caller()
 
-        record = self.make_record(
+        record = self._make_record(
             name=self.name,
             level=level,
             msg=msg,
@@ -121,43 +119,37 @@ class NLogger(Filterer, BaseAsyncLogger):
             exc_info=exc_info,
         )
 
-        await self.handle(record)
+        await self._handle(record)
 
-    async def handle(self, record: LogRecord):
-        if (not self.disabled) and self.filter(record):
-            await self.call_handlers(record)
+    async def _handle(self, record: LogRecord):
+        await self._call_handlers(record)
 
-    def add_handler(self, handler: "BaseAsyncHandler"):
-        if handler.id not in self.handlers:
-            self.handlers[handler.id] = handler
+    def _add_handler(self, handler: "BaseAsyncHandler"):
+        if handler.id not in self._handlers:
+            self._handlers[handler.id] = handler
 
-    def remove_handler(self, handler: "BaseAsyncHandler"):
-        self.handlers.pop(handler.id, None)
+    def _remove_handler(self, handler: "BaseAsyncHandler"):
+        self._handlers.pop(handler.id, None)
 
-    def has_handlers(self):
-        return len(self.handlers.keys()) > 0
+    def _has_handlers(self):
+        return len(self._handlers.keys()) > 0
 
-    async def call_handlers(self, record: LogRecord):
-        if not self.has_handlers():
+    async def _call_handlers(self, record: LogRecord):
+        if not self._has_handlers():
             raise ValueError("No handlers found for the logger")
 
         async with create_task_group() as tg:
-            for handler in self.handlers.values():
-                if record.levelno >= handler.level:
-                    tg.start_soon(handler.handle, record)
+            for handler in self._handlers.values():
+                tg.start_soon(handler.handle, record)
 
-    def is_enabled_for(self, level: int):
-        if self.disabled:
+    def _is_enabled_for(self, level: int):
+        if self._disabled:
             return False
-        return level >= self.level
+        return self._filter.filter(level=level)
 
-    def update_handlers_level(self):
-        for handler in self.handlers.values():
-            handler.level = self.level
-
-    async def disable(self):
-        if self.disabled:
+    async def _disable(self):
+        if self._disabled:
             return
-        [await handler.close() for handler in self.handlers.values()]
+        [await handler.close() for handler in self._handlers.values()]
         self._handlers = {}
-        self.disabled = True
+        self._disabled = True
