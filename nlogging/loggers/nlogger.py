@@ -145,7 +145,7 @@ class NLogger(BaseAsyncLogger):
     def _is_enabled_for(self, level: int):
         if self._disabled:
             return False
-        return self._filter.filter(level=level)
+        return level >= self.level
 
     async def _disable(self):
         if self._disabled:

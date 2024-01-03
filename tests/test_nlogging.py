@@ -19,7 +19,7 @@ def test_get_logger_with_name_should_return_a_new_logger(clean_up_manager: None)
     default_logger = get_logger()
     new_logger = get_logger(name="new-one")
 
-    assert default_logger.mem_addr != new_logger.mem_addr
+    assert default_logger._mem_addr != new_logger._mem_addr
     assert new_logger.name == "new-one"
     assert new_logger.level == LogLevel.INFO
 
@@ -46,7 +46,7 @@ def test_get_logger_informing_level_should_only_change_default_logger_level(
     assert logger1_level_before
     assert logger1.level == new_level
     assert logger2.level == new_level
-    assert logger1.mem_addr == logger2.mem_addr
+    assert logger1._mem_addr == logger2._mem_addr
 
 
 @mark.unit
@@ -62,7 +62,7 @@ def test_get_logger_informing_level_should_only_change_default_logger_level(
 def test_get_logger_calling_same_name_should_always_return_same_logger(
     name: str, clean_up_manager: None
 ):
-    assert get_logger(name=name).mem_addr == get_logger(name=name).mem_addr
+    assert get_logger(name=name)._mem_addr == get_logger(name=name)._mem_addr
     assert get_logger().__class__.__name__ == NLogger.__name__
 
 
@@ -84,7 +84,7 @@ def test_get_logger_informing_different_level_and_same_name_should_only_change_l
     for level in LogLevel._member_names_:
         logger = get_logger(name=name, level=level)
         assertions.append(logger.level == LogLevel[level].value)
-        ids.add(logger.mem_addr)
+        ids.add(logger._mem_addr)
         loggers.append(logger)
 
     assert all(logger.level == LogLevel.NOTSET for logger in loggers)

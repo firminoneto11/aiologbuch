@@ -49,11 +49,11 @@ class AsyncLoggerManagerSingleton[LC: BaseAsyncLogger]:
     async def disable_loggers(cls):
         self = cls.get_instance()[0]
         for name in self._active_loggers:
-            await self._active_loggers[name].disable()
+            await self._active_loggers[name]._disable()
         self._active_loggers = {}
 
     @classmethod
     async def disable_logger(cls, name: str):
         self = cls.get_instance()[0]
         if logger := self._active_loggers.pop(name, None):
-            await logger.disable()
+            await logger._disable()

@@ -24,7 +24,7 @@ def get_logger(
     logger = manager.get_logger(name=name, level=level)
 
     if filename:
-        logger.add_handler(
+        logger._add_handler(
             AsyncFileHandler(filename=filename, level=level, formatter=JsonFormatter())
         )
 
