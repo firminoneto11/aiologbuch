@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from nlogging.filters import Filter
 from nlogging.formatters import JsonFormatter
 from nlogging.handlers import AsyncStreamHandler
 from nlogging.levels import LogLevel, check_level
@@ -38,7 +37,6 @@ class NLogger(BaseAsyncLogger):
             should_update_handlers = value != self._level
 
         self._level = check_level(value)
-        self._filter = Filter(level=self.level)
 
         if should_update_handlers:
             for handler in self._handlers.values():
