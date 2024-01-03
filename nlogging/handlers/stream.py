@@ -3,9 +3,8 @@ from dataclasses import dataclass
 from sys import stderr
 from typing import TYPE_CHECKING
 
+from nlogging.handlers.base import BaseAsyncHandler, get_stderr_lock
 from nlogging.protocols import AIOProtocol
-
-from .base import BaseAsyncHandler, get_stderr_lock
 
 if TYPE_CHECKING:
     from nlogging._types import LevelType

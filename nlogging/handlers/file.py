@@ -1,25 +1,31 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING
 
 from anyio import Lock
 from anyio.streams.file import FileWriteStream
 
-from .base import BaseAsyncHandler
+from nlogging.handlers.base import BaseAsyncHandler
 
 if TYPE_CHECKING:
+    from logging import LogRecord
+    from typing import Protocol, TypedDict
+
     from nlogging._types import LevelType
-    from nlogging.formatters import BaseFormatter
 
     class MapType(TypedDict):
         resource: "_StreamResource"
         reference_count: int
+
+    class FormatterProtocol(Protocol):
+        def format(self, record: LogRecord) -> bytes:
+            ...
 
 
 @dataclass
 class _StreamResource:
     lock: Lock
     filename: str
-    stream: Optional[FileWriteStream] = None
+    stream: FileWriteStream | None = None
 
     async def init_stream(self):
         async with self.lock:
@@ -88,9 +94,10 @@ class _ResourceManager:
 class AsyncFileHandler(BaseAsyncHandler):
     should_request_resource = True
     _manager = _ResourceManager()
-    _filename: str
 
-    def __init__(self, filename: str, level: "LevelType", formatter: "BaseFormatter"):
+    def __init__(
+        self, filename: str, level: "LevelType", formatter: "FormatterProtocol"
+    ):
         if not filename:
             raise ValueError("'filename' cannot be empty")
         super().__init__(level=level, formatter=formatter)
