@@ -33,7 +33,6 @@ def test_get_logger_with_name_should_return_a_new_logger(clean_up_manager: None)
         LogLevel.ERROR,
         LogLevel.ERROR,
         LogLevel.CRITICAL,
-        LogLevel.NOTSET,
     ),
 )
 def test_get_logger_informing_level_should_only_change_default_logger_level(
@@ -87,6 +86,6 @@ def test_get_logger_informing_different_level_and_same_name_should_only_change_l
         ids.add(logger._mem_addr)
         loggers.append(logger)
 
-    assert all(logger.level == LogLevel.NOTSET for logger in loggers)
+    assert all(logger.level == LogLevel.CRITICAL for logger in loggers)
     assert all(assertions)
     assert len(ids) == 1

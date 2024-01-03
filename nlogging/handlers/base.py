@@ -1,6 +1,8 @@
+from asyncio import create_task
 from functools import lru_cache
 from logging import Handler
 from typing import TYPE_CHECKING
+from warnings import warn
 
 from anyio import Lock
 from anyio.to_thread import run_sync
@@ -72,3 +74,9 @@ class BaseAsyncHandler:
         if RAISE_EXCEPTIONS:
             async with get_stderr_lock():
                 await run_sync(Handler.handleError, None, record)
+
+    def __del__(self):
+        try:
+            create_task(self.close())
+        except RuntimeError:
+            warn("Event loop is closed. Handler resources may not be closed properly")
