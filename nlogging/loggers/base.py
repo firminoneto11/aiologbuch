@@ -2,14 +2,22 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from logging import LogRecord
-
-    from nlogging._types import AsyncHandlerProtocol, CallerInfo, LevelType, MessageType
+    from nlogging._types import (
+        AsyncHandlerProtocol,
+        CallerInfo,
+        FilterProtocol,
+        FormatterProtocol,
+        LevelType,
+        LogRecordProtocol,
+        MessageType,
+    )
 
 
 class BaseAsyncLogger(ABC):
     @abstractmethod
-    def __init__(self, name: str, level: "LevelType") -> None:
+    def __init__(
+        self, name: str, level: "LevelType", filter_class: "FilterProtocol"
+    ) -> None:
         ...
 
     @property
@@ -62,7 +70,7 @@ class BaseAsyncLogger(ABC):
         function_name: str,
         line_number: int,
         exc_info: Optional[BaseException] = None,
-    ) -> "LogRecord":
+    ) -> "LogRecordProtocol":
         ...
 
     @abstractmethod
@@ -72,11 +80,16 @@ class BaseAsyncLogger(ABC):
         ...
 
     @abstractmethod
-    async def _handle(self, record: "LogRecord") -> None:
+    async def _handle(self, record: "LogRecordProtocol") -> None:
         ...
 
     @abstractmethod
-    def _add_handler(self, handler: "AsyncHandlerProtocol") -> None:
+    def _add_handler(
+        self,
+        handler_class: "AsyncHandlerProtocol",
+        formatter: "FormatterProtocol",
+        filename: str = "",
+    ) -> None:
         ...
 
     @abstractmethod
@@ -88,7 +101,7 @@ class BaseAsyncLogger(ABC):
         ...
 
     @abstractmethod
-    async def _call_handlers(self, record: "LogRecord") -> None:
+    async def _call_handlers(self, record: "LogRecordProtocol") -> None:
         ...
 
     @abstractmethod

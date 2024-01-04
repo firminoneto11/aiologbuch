@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from nlogging.formatters.base import BaseFormatter
 
 if TYPE_CHECKING:
-    from logging import LogRecord
+    from nlogging._types import LogRecordProtocol
 
 
 # NOTE: orjson is optional, but it's faster than stdlib json
@@ -14,7 +14,7 @@ except ImportError:
 
 
 class JsonFormatter(BaseFormatter):
-    def format(self, record: "LogRecord"):
+    def format(self, record: "LogRecordProtocol"):
         log_data = {
             "timestamp": self.format_time(record),
             "level": record.levelname,

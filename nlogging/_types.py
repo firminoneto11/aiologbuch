@@ -1,5 +1,4 @@
-from logging import LogRecord
-from typing import Literal, Protocol, Self, TypedDict
+from typing import Literal, Optional, Protocol, Self, TypedDict
 
 
 class CallerInfo(TypedDict):
@@ -14,12 +13,14 @@ class MapType(TypedDict):
 
 
 class LoggerProtocol(Protocol):
-    def __call__(self, name: str, level: "LevelType") -> Self:
+    def __call__(
+        self, name: str, level: "LevelType", filter_class: "FilterProtocol"
+    ) -> Self:
         ...
 
 
 class FormatterProtocol(Protocol):
-    def format(self, record: LogRecord) -> bytes:
+    def format(self, record: "LogRecordProtocol") -> bytes:
         ...
 
 
@@ -38,15 +39,46 @@ class AsyncHandlerProtocol(Protocol):
     id: int
     filter: "FilterProtocol"
 
+    def __call__(
+        self,
+        filter: "FilterProtocol",
+        formatter: "FormatterProtocol",
+        filename: str = "",
+    ) -> Self:
+        ...
+
     async def close(self) -> None:
         ...
 
-    async def handle(self, record: LogRecord) -> None:
+    async def handle(self, record: "LogRecordProtocol") -> None:
         ...
 
 
 class FilterProtocol(Protocol):
-    def filter(self, record: LogRecord) -> bool:
+    level: int
+
+    def __call__(self, level: int) -> Self:
+        ...
+
+    def filter(self, record: "LogRecordProtocol") -> bool:
+        ...
+
+
+class LogRecordProtocol(Protocol):
+    levelno: int
+    created: float
+    msecs: float
+    levelname: str
+    process: Optional[int]
+    processName: Optional[str]
+    thread: Optional[int]
+    threadName: Optional[str]
+    pathname: str
+    funcName: str
+    lineno: int
+    exc_text: Optional[str]
+
+    def getMessage(self) -> str:
         ...
 
 

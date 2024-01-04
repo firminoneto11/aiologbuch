@@ -3,14 +3,13 @@ from pytest import mark
 from nlogging import get_logger
 from nlogging.levels import LogLevel
 from nlogging.loggers import NLogger
-from nlogging.shared import ROOT_LOGGER_NAME
 
 
 @mark.unit
 def test_get_logger_without_name_should_return_default_logger():
-    logger = get_logger()
+    logger = get_logger(name="log")
 
-    assert logger.name == ROOT_LOGGER_NAME
+    assert logger.name == "log"
     assert logger.level == LogLevel.INFO
 
 

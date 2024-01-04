@@ -17,5 +17,3 @@ def get_stderr_lock():
 
 
 RAISE_EXCEPTIONS = _parse_bool(getenv("NLOGGING_RAISE_EXCEPTIONS", "true"))
-
-ROOT_LOGGER_NAME = "nlogger"

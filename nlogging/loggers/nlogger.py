@@ -1,3 +1,4 @@
+from collections import namedtuple
 from inspect import stack
 from logging import LogRecord
 from traceback import format_exception
@@ -5,22 +6,32 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from nlogging.filters import Filter
 from nlogging.levels import LogLevel, check_level
 from nlogging.loggers.base import BaseAsyncLogger
 
 if TYPE_CHECKING:
-    from nlogging._types import AsyncHandlerProtocol, CallerInfo, LevelType, MessageType
+    from nlogging._types import (
+        AsyncHandlerProtocol,
+        CallerInfo,
+        FilterProtocol,
+        FormatterProtocol,
+        LevelType,
+        LogRecordProtocol,
+        MessageType,
+    )
 
 
 class NLogger(BaseAsyncLogger):
     _handlers: dict[int, "AsyncHandlerProtocol"]
 
-    def __init__(self, name: str, level: "LevelType"):
+    def __init__(self, name: str, level: "LevelType", filter_class: "FilterProtocol"):
         self.name = name
-        self.level = level
+
         self._handlers = {}
         self._disabled = False
+        self._level = check_level(level)
+        self._filter = filter_class(self.level)
+        self._filter_class = filter_class
 
     @property
     def level(self):
@@ -28,15 +39,9 @@ class NLogger(BaseAsyncLogger):
 
     @level.setter
     def level(self, value: "LevelType"):
-        should_update_handlers = False
-        if getattr(self, "_level", None) is not None:
-            should_update_handlers = value != self._level
-
-        self._level = check_level(value)
-
-        if should_update_handlers:
-            for handler in self._handlers.values():
-                handler.filter = Filter(level=self.level)
+        new_value = check_level(value)
+        self._level = new_value
+        self._filter = self._filter_class(new_value)
 
     @property
     def _mem_addr(self):
@@ -79,7 +84,7 @@ class NLogger(BaseAsyncLogger):
         function_name: str,
         line_number: int,
         exc_info: Optional[BaseException] = None,
-    ):
+    ) -> "LogRecordProtocol":
         if exc_info:
             info = (type(exc_info), exc_info, exc_info.__traceback__)
             text = "".join(format_exception(exc_info, limit=None, chain=True))
@@ -115,12 +120,21 @@ class NLogger(BaseAsyncLogger):
 
         await self._handle(record)
 
-    async def _handle(self, record: LogRecord):
+    async def _handle(self, record: "LogRecordProtocol"):
         await self._call_handlers(record)
 
-    def _add_handler(self, handler: "AsyncHandlerProtocol"):
-        if handler.id not in self._handlers:
-            self._handlers[handler.id] = handler
+    def _add_handler(
+        self,
+        handler_class: "AsyncHandlerProtocol",
+        formatter: "FormatterProtocol",
+        filename: str = "",
+    ):
+        kwargs = {"filter": self._filter, "formatter": formatter}
+        if filename:
+            kwargs["filename"] = filename
+
+        handler = handler_class(**kwargs)
+        self._handlers[handler.id] = handler
 
     def _remove_handler(self, handler: "AsyncHandlerProtocol"):
         self._handlers.pop(handler.id, None)
@@ -128,7 +142,7 @@ class NLogger(BaseAsyncLogger):
     def _has_handlers(self):
         return len(self._handlers.keys()) > 0
 
-    async def _call_handlers(self, record: LogRecord):
+    async def _call_handlers(self, record: "LogRecordProtocol"):
         if not self._has_handlers():
             raise ValueError("No handlers found for the logger")
 
@@ -139,7 +153,7 @@ class NLogger(BaseAsyncLogger):
     def _is_enabled_for(self, level: int):
         if self._disabled:
             return False
-        return level >= self.level
+        return self._filter.filter(namedtuple("T", ("levelno",))(level))
 
     async def _disable(self):
         if self._disabled:

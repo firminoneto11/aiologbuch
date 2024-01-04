@@ -9,9 +9,7 @@ from anyio.to_thread import run_sync
 from nlogging.shared import RAISE_EXCEPTIONS, get_stderr_lock
 
 if TYPE_CHECKING:
-    from logging import LogRecord
-
-    from nlogging._types import FilterProtocol, FormatterProtocol
+    from nlogging._types import FilterProtocol, FormatterProtocol, LogRecordProtocol
 
 
 @lru_cache(maxsize=1)
@@ -34,7 +32,7 @@ class BaseAsyncHandler:
     def id(self):
         return self._id
 
-    async def emit(self, record: "LogRecord"):
+    async def emit(self, record: "LogRecordProtocol"):
         try:
             msg = self.format(record) + self.terminator
             await self.write_and_flush(msg)
@@ -49,14 +47,14 @@ class BaseAsyncHandler:
     async def close(self) -> None:
         raise NotImplementedError("'close' must be implemented by Handler subclasses")
 
-    def format(self, record: "LogRecord"):
+    def format(self, record: "LogRecordProtocol"):
         return self.formatter.format(record)
 
-    async def handle(self, record: "LogRecord"):
+    async def handle(self, record: "LogRecordProtocol"):
         if self.filter.filter(record):
             await self.emit(record)
 
-    async def handle_error(self, record: "LogRecord"):
+    async def handle_error(self, record: "LogRecordProtocol"):
         if RAISE_EXCEPTIONS:
             async with get_stderr_lock():
                 await run_sync(Handler.handleError, None, record)

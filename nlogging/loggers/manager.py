@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Self
 
 if TYPE_CHECKING:
-    from nlogging._types import LevelType, LoggerProtocol
+    from nlogging._types import FilterProtocol, LevelType, LoggerProtocol
 
 
 class AsyncLoggerManagerSingleton[LC: "LoggerProtocol"]:
@@ -28,10 +28,11 @@ class AsyncLoggerManagerSingleton[LC: "LoggerProtocol"]:
             created = True
         return cls._instance, created
 
-    def get_logger(self, name: str, level: "LevelType"):
+    def get_logger(self, name: str, level: "LevelType", filter_class: "FilterProtocol"):
         created = False
         if name not in self._active_loggers:
-            self._active_loggers[name], created = self.lc(name, level), True
+            self._active_loggers[name] = self.lc(name, level, filter_class)
+            created = True
         (logger := self._active_loggers[name]).level = level
         return logger, created
 
