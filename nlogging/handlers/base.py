@@ -4,11 +4,10 @@ from logging import Handler
 from typing import TYPE_CHECKING
 from warnings import warn
 
-from anyio import Lock
 from anyio.to_thread import run_sync
 
 from nlogging.filters import Filter
-from nlogging.settings import RAISE_EXCEPTIONS
+from nlogging.shared import RAISE_EXCEPTIONS, get_stderr_lock
 
 if TYPE_CHECKING:
     from logging import LogRecord
@@ -22,11 +21,6 @@ def _handler_id_generator():
     while True:
         yield i
         i += 1
-
-
-@lru_cache(maxsize=1)
-def get_stderr_lock():
-    return Lock()
 
 
 class BaseAsyncHandler:

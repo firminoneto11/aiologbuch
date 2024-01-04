@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from sys import stderr
 from typing import TYPE_CHECKING
 
-from nlogging.handlers.base import BaseAsyncHandler, get_stderr_lock
+from nlogging.handlers.base import BaseAsyncHandler
+from nlogging.shared import get_stderr_lock
 
 if TYPE_CHECKING:
     from nlogging._types import FormatterProtocol, LevelType

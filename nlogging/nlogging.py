@@ -2,7 +2,7 @@ from ._types import LevelType
 from .formatters import JsonFormatter
 from .handlers import AsyncFileHandler, AsyncStreamHandler
 from .loggers import AsyncLoggerManagerSingleton, NLogger
-from .settings import ROOT_LOGGER_NAME
+from .shared import ROOT_LOGGER_NAME
 
 
 def get_logger(
@@ -24,11 +24,12 @@ def get_logger(
     logger, created = manager.get_logger(name=name, level=level)
 
     if created:
-        logger._add_handler(AsyncStreamHandler(level=level, formatter=JsonFormatter()))
+        formatter = JsonFormatter()
+        logger._add_handler(AsyncStreamHandler(level=level, formatter=formatter))
 
-    if filename:
-        logger._add_handler(
-            AsyncFileHandler(filename=filename, level=level, formatter=JsonFormatter())
-        )
+        if filename:
+            logger._add_handler(
+                AsyncFileHandler(filename=filename, level=level, formatter=formatter)
+            )
 
     return logger

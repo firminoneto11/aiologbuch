@@ -3,7 +3,7 @@ from pytest import mark
 from nlogging import get_logger
 from nlogging.levels import LogLevel
 from nlogging.loggers import NLogger
-from nlogging.settings import ROOT_LOGGER_NAME
+from nlogging.shared import ROOT_LOGGER_NAME
 
 
 @mark.unit
