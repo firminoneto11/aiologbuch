@@ -7,7 +7,7 @@ from anyio.streams.file import FileWriteStream
 from nlogging.handlers.base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from nlogging._types import FormatterProtocol, LevelType, MapType
+    from nlogging._types import FilterProtocol, FormatterProtocol, MapType
 
 
 @dataclass
@@ -85,11 +85,11 @@ class AsyncFileHandler(BaseAsyncHandler):
     _manager = _ResourceManager()
 
     def __init__(
-        self, filename: str, level: "LevelType", formatter: "FormatterProtocol"
+        self, filename: str, filter: "FilterProtocol", formatter: "FormatterProtocol"
     ):
         if not filename:
             raise ValueError("'filename' cannot be empty")
-        super().__init__(level=level, formatter=formatter)
+        super().__init__(filter=filter, formatter=formatter)
         self._filename = filename
 
     @property

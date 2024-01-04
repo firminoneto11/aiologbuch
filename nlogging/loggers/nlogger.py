@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
+from nlogging.filters import Filter
 from nlogging.levels import LogLevel, check_level
 from nlogging.loggers.base import BaseAsyncLogger
 
@@ -35,7 +36,7 @@ class NLogger(BaseAsyncLogger):
 
         if should_update_handlers:
             for handler in self._handlers.values():
-                handler.set_level(self.level)
+                handler.filter = Filter(level=self.level)
 
     @property
     def _mem_addr(self):

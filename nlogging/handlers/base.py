@@ -6,13 +6,12 @@ from warnings import warn
 
 from anyio.to_thread import run_sync
 
-from nlogging.filters import Filter
 from nlogging.shared import RAISE_EXCEPTIONS, get_stderr_lock
 
 if TYPE_CHECKING:
     from logging import LogRecord
 
-    from nlogging._types import FormatterProtocol, LevelType
+    from nlogging._types import FilterProtocol, FormatterProtocol
 
 
 @lru_cache(maxsize=1)
@@ -26,21 +25,14 @@ def _handler_id_generator():
 class BaseAsyncHandler:
     terminator = b"\n"
 
-    def __init__(self, level: "LevelType", formatter: "FormatterProtocol"):
+    def __init__(self, filter: "FilterProtocol", formatter: "FormatterProtocol"):
         self._id = next(_handler_id_generator())
-        self._filter = Filter(level=level)
         self.formatter = formatter
+        self.filter = filter
 
     @property
     def id(self):
         return self._id
-
-    @property
-    def filter(self):
-        return self._filter
-
-    def set_level(self, level: "LevelType"):
-        self.filter.level = level
 
     async def emit(self, record: "LogRecord"):
         try:
