@@ -35,7 +35,7 @@ markers = ["unit", "integration", "e2e"]
 
 # Coverage configs
 [tool.coverage.run]
-omit = ["test/*", "*conftest.py", "venv/*", "tests/*"]
+omit = ["test/*", "*conftest.py", "venv/*", "tests/*", "*_types.py"]
 data_file = ".coverage/coverage"
 branch = true
 
