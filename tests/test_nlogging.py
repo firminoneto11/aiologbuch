@@ -5,6 +5,10 @@ from nlogging.levels import LogLevel
 from nlogging.loggers import NLogger
 
 
+def mem_addr(obj: object):
+    return hex(id(obj))
+
+
 @mark.unit
 def test_get_logger_without_name_should_return_default_logger():
     logger = get_logger(name="log")
@@ -15,10 +19,10 @@ def test_get_logger_without_name_should_return_default_logger():
 
 @mark.unit
 def test_get_logger_with_name_should_return_a_new_logger(clean_up_manager: None):
-    default_logger = get_logger()
+    default_logger = get_logger(name="log")
     new_logger = get_logger(name="new-one")
 
-    assert default_logger._mem_addr != new_logger._mem_addr
+    assert mem_addr(default_logger) != mem_addr(new_logger)
     assert new_logger.name == "new-one"
     assert new_logger.level == LogLevel.INFO
 
@@ -37,14 +41,14 @@ def test_get_logger_with_name_should_return_a_new_logger(clean_up_manager: None)
 def test_get_logger_informing_level_should_only_change_default_logger_level(
     new_level: int,
 ):
-    logger1 = get_logger()
+    logger1 = get_logger(name="log")
     logger1_level_before = logger1.level == LogLevel.INFO
-    logger2 = get_logger(level=new_level)
+    logger2 = get_logger(name="log", level=new_level)
 
     assert logger1_level_before
     assert logger1.level == new_level
     assert logger2.level == new_level
-    assert logger1._mem_addr == logger2._mem_addr
+    assert mem_addr(logger1) == mem_addr(logger2)
 
 
 @mark.unit
@@ -60,8 +64,8 @@ def test_get_logger_informing_level_should_only_change_default_logger_level(
 def test_get_logger_calling_same_name_should_always_return_same_logger(
     name: str, clean_up_manager: None
 ):
-    assert get_logger(name=name)._mem_addr == get_logger(name=name)._mem_addr
-    assert get_logger().__class__.__name__ == NLogger.__name__
+    assert mem_addr(get_logger(name=name)) == mem_addr(get_logger(name=name))
+    assert get_logger(name="log").__class__.__name__ == NLogger.__name__
 
 
 @mark.unit
@@ -82,7 +86,7 @@ def test_get_logger_informing_different_level_and_same_name_should_only_change_l
     for level in LogLevel._member_names_:
         logger = get_logger(name=name, level=level)
         assertions.append(logger.level == LogLevel[level].value)
-        ids.add(logger._mem_addr)
+        ids.add(mem_addr(logger))
         loggers.append(logger)
 
     assert all(logger.level == LogLevel.CRITICAL for logger in loggers)
