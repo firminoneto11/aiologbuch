@@ -36,14 +36,17 @@ class _ResourceProtocol(Protocol):
 
 class AsyncHandlerProtocol(Protocol):
     id: int
-
-    def set_level(self, level: "LevelType") -> None:
-        ...
+    filter: "FilterProtocol"
 
     async def close(self) -> None:
         ...
 
     async def handle(self, record: LogRecord) -> None:
+        ...
+
+
+class FilterProtocol(Protocol):
+    def filter(self, record: LogRecord) -> bool:
         ...
 
 
