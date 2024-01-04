@@ -13,9 +13,14 @@ class MapType(TypedDict):
 
 
 class LoggerProtocol(Protocol):
+    level: int
+
     def __call__(
         self, name: str, level: "LevelType", filter_class: "FilterProtocol"
     ) -> Self:
+        ...
+
+    async def _disable(self) -> None:
         ...
 
 
@@ -60,7 +65,7 @@ class FilterProtocol(Protocol):
     def __call__(self, level: int) -> Self:
         ...
 
-    def filter(self, record: "LogRecordProtocol") -> bool:
+    def filter(self, record: "LogRecordProtocol | int") -> bool:
         ...
 
 

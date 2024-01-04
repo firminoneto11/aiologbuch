@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class BaseAsyncLogger(ABC):
+    _handlers: dict[int, "AsyncHandlerProtocol"]
+
     @abstractmethod
     def __init__(
         self, name: str, level: "LevelType", filter_class: "FilterProtocol"
@@ -28,10 +30,6 @@ class BaseAsyncLogger(ABC):
     @level.setter
     @abstractmethod
     def level(self, value: "LevelType") -> None:
-        ...
-
-    @property
-    def _mem_addr(self) -> str:
         ...
 
     @abstractmethod

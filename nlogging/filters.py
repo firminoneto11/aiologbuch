@@ -9,10 +9,14 @@ if TYPE_CHECKING:
 class Filter:
     level: int
 
-    def filter(self, record: "LogRecordProtocol"):
+    def filter(self, record: "LogRecordProtocol | int"):
+        if isinstance(record, int):
+            return record >= self.level
         return record.levelno >= self.level
 
 
 class ExclusiveFilter(Filter):
-    def filter(self, record: "LogRecordProtocol"):
+    def filter(self, record: "LogRecordProtocol | int"):
+        if isinstance(record, int):
+            return record == self.level
         return record.levelno == self.level

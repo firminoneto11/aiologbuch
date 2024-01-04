@@ -1,4 +1,3 @@
-from collections import namedtuple
 from inspect import stack
 from logging import LogRecord
 from traceback import format_exception
@@ -22,8 +21,6 @@ if TYPE_CHECKING:
 
 
 class NLogger(BaseAsyncLogger):
-    _handlers: dict[int, "AsyncHandlerProtocol"]
-
     def __init__(self, name: str, level: "LevelType", filter_class: "FilterProtocol"):
         self.name = name
 
@@ -42,10 +39,6 @@ class NLogger(BaseAsyncLogger):
         new_value = check_level(value)
         self._level = new_value
         self._filter = self._filter_class(new_value)
-
-    @property
-    def _mem_addr(self):
-        return hex(id(self))
 
     async def debug(self, msg: "MessageType"):
         if self._is_enabled_for(LogLevel.DEBUG):
@@ -153,7 +146,7 @@ class NLogger(BaseAsyncLogger):
     def _is_enabled_for(self, level: int):
         if self._disabled:
             return False
-        return self._filter.filter(namedtuple("T", ("levelno",))(level))
+        return self._filter.filter(level)
 
     async def _disable(self):
         if self._disabled:

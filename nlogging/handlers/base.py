@@ -63,4 +63,8 @@ class BaseAsyncHandler:
         try:
             create_task(self.close())
         except RuntimeError:
-            warn("Event loop is closed. Handler resources may not be closed properly")
+            warn(
+                ResourceWarning(
+                    "Event loop is closed. Handler resources may not be closed properly"
+                )
+            )
