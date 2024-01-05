@@ -2,36 +2,41 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from anyio import Lock
-from anyio.streams.file import FileWriteStream
 
+from nlogging.handlers.backends import get_backend
 from nlogging.handlers.base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from nlogging._types import FilterProtocol, FormatterProtocol, MapType
+    from nlogging._types import (
+        BackendProtocol,
+        FilterProtocol,
+        FormatterProtocol,
+        MapType,
+    )
+
+
+backend_class = get_backend("aiofile")
 
 
 @dataclass
 class _StreamResource:
-    lock: Lock
     filename: str
-    stream: FileWriteStream | None = None
+    backend: "BackendProtocol | None" = None
 
     async def init_stream(self):
-        async with self.lock:
-            if not self.stream:
-                self.stream = await FileWriteStream.from_path(self.filename, True)
+        if not self.backend:
+            self.backend = backend_class(filename=self.filename)
+            await self.backend.init()
 
     async def send(self, msg: bytes):
-        async with self.lock:
-            if not self.stream:
-                raise RuntimeError("Stream is not initialized")
-            await self.stream.send(msg)
+        if not self.backend:
+            raise RuntimeError("Stream is not initialized")
+        await self.backend.send(msg)
 
     async def close(self):
-        async with self.lock:
-            if self.stream:
-                await self.stream.aclose()
-                self.stream = None
+        if self.backend:
+            await self.backend.close()
+            self.backend = None
 
 
 @dataclass
@@ -55,17 +60,17 @@ class _ResourceManager:
                 resource = content["resource"]
                 content["reference_count"] += 1
             else:
-                resource = _StreamResource(lock=Lock(), filename=filename)
+                resource = _StreamResource(filename=filename)
                 self.map[filename] = {"resource": resource, "reference_count": 1}
 
-        await resource.init_stream()
+            await resource.init_stream()
 
     async def send_message(self, filename: str, msg: bytes):
         async with self.lock:
             if not (content := self.map.get(filename)):
                 raise RuntimeError("Resource is not initialized")
 
-        await content["resource"].send(msg)
+            await content["resource"].send(msg)
 
     async def close_resource(self, filename: str):
         resource = None
@@ -76,8 +81,8 @@ class _ResourceManager:
                 if content["reference_count"] <= 0:
                     resource = self.map.pop(filename)["resource"]
 
-        if resource:
-            await resource.close()
+            if resource:
+                await resource.close()
 
 
 class AsyncFileHandler(BaseAsyncHandler):
