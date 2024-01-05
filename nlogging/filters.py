@@ -1,13 +1,16 @@
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from nlogging._types import LogRecordProtocol
 
 
-@dataclass
 class Filter:
-    level: int
+    def __init__(self, level: int):
+        self._level = level
+
+    @property
+    def level(self):
+        return self._level
 
     def filter(self, record: "LogRecordProtocol | int"):
         if isinstance(record, int):

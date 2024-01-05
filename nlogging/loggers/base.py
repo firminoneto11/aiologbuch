@@ -6,8 +6,6 @@ if TYPE_CHECKING:
         AsyncHandlerProtocol,
         CallerInfo,
         FilterProtocol,
-        FormatterProtocol,
-        LevelType,
         LogRecordProtocol,
         MessageType,
     )
@@ -17,9 +15,7 @@ class BaseAsyncLogger(ABC):
     _handlers: dict[int, "AsyncHandlerProtocol"]
 
     @abstractmethod
-    def __init__(
-        self, name: str, level: "LevelType", filter_class: "FilterProtocol"
-    ) -> None:
+    def __init__(self, name: str, filter: "FilterProtocol") -> None:
         ...
 
     @property
@@ -27,9 +23,8 @@ class BaseAsyncLogger(ABC):
     def level(self) -> int:
         ...
 
-    @level.setter
     @abstractmethod
-    def level(self, value: "LevelType") -> None:
+    def filter(self, level: int) -> bool:
         ...
 
     @abstractmethod
@@ -82,12 +77,7 @@ class BaseAsyncLogger(ABC):
         ...
 
     @abstractmethod
-    def _add_handler(
-        self,
-        handler_class: "AsyncHandlerProtocol",
-        formatter: "FormatterProtocol",
-        filename: str = "",
-    ) -> None:
+    def _add_handler(self, handler: "AsyncHandlerProtocol") -> None:
         ...
 
     @abstractmethod

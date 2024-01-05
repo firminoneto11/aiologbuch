@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from nlogging.levels import LogLevel, check_level
+from nlogging.levels import LogLevel
 from nlogging.loggers.base import BaseAsyncLogger
 
 if TYPE_CHECKING:
@@ -13,32 +13,25 @@ if TYPE_CHECKING:
         AsyncHandlerProtocol,
         CallerInfo,
         FilterProtocol,
-        FormatterProtocol,
-        LevelType,
         LogRecordProtocol,
         MessageType,
     )
 
 
 class NLogger(BaseAsyncLogger):
-    def __init__(self, name: str, level: "LevelType", filter_class: "FilterProtocol"):
+    def __init__(self, name: str, filter: "FilterProtocol"):
         self.name = name
 
-        self._handlers = {}
         self._disabled = False
-        self._level = check_level(level)
-        self._filter = filter_class(self.level)
-        self._filter_class = filter_class
+        self._filter = filter
+        self._handlers = {}
 
     @property
     def level(self):
-        return self._level
+        return self._filter.level
 
-    @level.setter
-    def level(self, value: "LevelType"):
-        new_value = check_level(value)
-        self._level = new_value
-        self._filter = self._filter_class(new_value)
+    def filter(self, level: int):
+        return self._filter.filter(level)
 
     async def debug(self, msg: "MessageType"):
         if self._is_enabled_for(LogLevel.DEBUG):
@@ -116,18 +109,9 @@ class NLogger(BaseAsyncLogger):
     async def _handle(self, record: "LogRecordProtocol"):
         await self._call_handlers(record)
 
-    def _add_handler(
-        self,
-        handler_class: "AsyncHandlerProtocol",
-        formatter: "FormatterProtocol",
-        filename: str = "",
-    ):
-        kwargs = {"filter": self._filter, "formatter": formatter}
-        if filename:
-            kwargs["filename"] = filename
-
-        handler = handler_class(**kwargs)
-        self._handlers[handler.id] = handler
+    def _add_handler(self, handler: "AsyncHandlerProtocol"):
+        if handler.id not in self._handlers:
+            self._handlers[handler.id] = handler
 
     def _remove_handler(self, handler: "AsyncHandlerProtocol"):
         self._handlers.pop(handler.id, None)
@@ -146,7 +130,7 @@ class NLogger(BaseAsyncLogger):
     def _is_enabled_for(self, level: int):
         if self._disabled:
             return False
-        return self._filter.filter(level)
+        return self.filter(level)
 
     async def _disable(self):
         if self._disabled:
