@@ -87,5 +87,19 @@ class LogRecordProtocol(Protocol):
         ...
 
 
+class BackendProtocol(Protocol):
+    def __call__(self, filename: str) -> Self:
+        ...
+
+    async def init(self) -> None:
+        ...
+
+    async def send(self, msg: bytes) -> None:
+        ...
+
+    async def close(self) -> None:
+        ...
+
+
 type MessageType = str | dict
 type LevelType = int | Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
