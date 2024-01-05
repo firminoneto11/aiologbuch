@@ -37,15 +37,8 @@ class _ResourceProtocol(Protocol):
 
 
 class AsyncHandlerProtocol(Protocol):
-    id: int
-    filter: "FilterProtocol"
-
-    def __call__(
-        self,
-        filter: "FilterProtocol",
-        formatter: "FormatterProtocol",
-        filename: str = "",
-    ) -> Self:
+    @property
+    def id(self) -> int:
         ...
 
     async def close(self) -> None:
