@@ -3,8 +3,7 @@ from typing import TYPE_CHECKING
 
 from anyio import Lock
 
-from nlogging.handlers.backends import get_backend
-
+from .backends import get_backend
 from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
