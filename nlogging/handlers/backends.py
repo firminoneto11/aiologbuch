@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 from aiofile import async_open
-from anyio import Lock
 from anyio.streams.file import FileWriteStream
 
 if TYPE_CHECKING:
@@ -24,52 +23,38 @@ def get_backend(name: Literal["thread", "aiofile"]) -> "BackendProtocol":
 @dataclass
 class AIOBackend:
     filename: str
-    _lock: Lock = None
     _file_stream: "BinaryFileWrapper | None" = None
 
-    def __post_init__(self):
-        self._lock = Lock()
-
     async def init(self):
-        async with self._lock:
-            if not self._file_stream:
-                self._file_stream = await async_open(self.filename, mode="a+b")
+        if not self._file_stream:
+            self._file_stream = await async_open(self.filename, mode="a+b")
 
     async def send(self, msg: bytes):
-        async with self._lock:
-            if not self._file_stream:
-                return
-            await self._file_stream.write(msg)
+        if not self._file_stream:
+            raise RuntimeError("Stream is not initialized")
+        await self._file_stream.write(msg)
 
     async def close(self):
-        async with self._lock:
-            if self._file_stream:
-                await self._file_stream.close()
-                self._file_stream = None
+        if self._file_stream:
+            await self._file_stream.close()
+            self._file_stream = None
 
 
 @dataclass
 class ThreadBackend:
     filename: str
-    _lock: Lock = None
     _file_stream: "FileWriteStream | None" = None
 
-    def __post_init__(self):
-        self._lock = Lock()
-
     async def init(self):
-        async with self._lock:
-            if not self._file_stream:
-                self._file_stream = await FileWriteStream.from_path(self.filename, True)
+        if not self._file_stream:
+            self._file_stream = await FileWriteStream.from_path(self.filename, True)
 
     async def send(self, msg: bytes):
-        async with self._lock:
-            if not self._file_stream:
-                return
-            await self._file_stream.send(msg)
+        if not self._file_stream:
+            raise RuntimeError("Stream is not initialized")
+        await self._file_stream.send(msg)
 
     async def close(self):
-        async with self._lock:
-            if self._file_stream:
-                await self._file_stream.aclose()
-                self._file_stream = None
+        if self._file_stream:
+            await self._file_stream.aclose()
+            self._file_stream = None

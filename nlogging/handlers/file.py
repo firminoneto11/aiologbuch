@@ -22,21 +22,28 @@ backend_class = get_backend("aiofile")
 class _StreamResource:
     filename: str
     backend: "BackendProtocol | None" = None
+    _lock: Lock = None
+
+    def __post_init__(self):
+        self._lock = Lock()
 
     async def init_stream(self):
-        if not self.backend:
-            self.backend = backend_class(filename=self.filename)
-            await self.backend.init()
+        async with self._lock:
+            if not self.backend:
+                self.backend = backend_class(filename=self.filename)
+                await self.backend.init()
 
     async def send(self, msg: bytes):
-        if not self.backend:
-            raise RuntimeError("Stream is not initialized")
-        await self.backend.send(msg)
+        async with self._lock:
+            if not self.backend:
+                raise RuntimeError("Stream is not initialized")
+            await self.backend.send(msg)
 
     async def close(self):
-        if self.backend:
-            await self.backend.close()
-            self.backend = None
+        async with self._lock:
+            if self.backend:
+                await self.backend.close()
+                self.backend = None
 
 
 @dataclass
