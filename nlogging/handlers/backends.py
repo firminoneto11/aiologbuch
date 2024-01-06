@@ -1,33 +1,42 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
-from aiofile import async_open
 from anyio.streams.file import FileWriteStream
 
-if TYPE_CHECKING:
-    from aiofile import BinaryFileWrapper
+# NOTE: aiofile is optional but is recommended for native async file writing
+try:
+    from aiofile import async_open as aopen
+except ImportError:
+    aopen = None
 
-    from nlogging._types import BackendProtocol
+if TYPE_CHECKING:
+    from nlogging._types import BackendProtocol, BinaryFileWrapperProtocol
 
 
 def get_backend(name: Literal["thread", "aiofile"]) -> "BackendProtocol":
-    match name.lower().strip():
-        case "thread":
-            return ThreadBackend
-        case "aiofile":
-            return AIOBackend
-        case _:
-            raise ValueError("Invalid backend name")
+    backends = {"thread": ThreadBackend, "aiofile": AIOBackend}
+
+    backend_name = name.lower().strip()
+    if (backend := backends.get(backend_name)) is None:
+        raise ValueError(f"Unknown file backend: {backend_name}")
+
+    if aopen is None:
+        return ThreadBackend
+
+    return backend
 
 
 @dataclass
 class AIOBackend:
     filename: str
-    _file_stream: "BinaryFileWrapper | None" = None
+    _file_stream: "BinaryFileWrapperProtocol | None" = None
 
     async def init(self):
+        if aopen is None:
+            raise RuntimeError("'aiofile' is not installed")
+
         if not self._file_stream:
-            self._file_stream = await async_open(self.filename, mode="a+b")
+            self._file_stream = await aopen(self.filename, mode="a+b")
 
     async def send(self, msg: bytes):
         if not self._file_stream:
