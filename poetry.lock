@@ -338,9 +338,11 @@ files = [
 tests = ["pytest", "pytest-cov"]
 
 [extras]
-extra-tools = ["aiofile", "orjson"]
+aiofile = ["aiofile"]
+all = ["aiofile", "orjson"]
+orjson = ["orjson"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "3.12.*"
-content-hash = "6c5a097b697835240ce8d4fdde1bb4d33178aed687b6ec500f35b5777e2107c2"
+content-hash = "f777c78c212b553d6bcfbbba5ef6031ab0c71c3dbeaebc285256e5deba88b29d"

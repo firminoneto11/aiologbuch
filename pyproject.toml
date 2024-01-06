@@ -18,7 +18,9 @@ coverage = "7.3.*"
 pytest-sugar = "0.9.*"
 
 [tool.poetry.extras]
-extra_tools = ["orjson", "aiofile"]
+orjson = ["orjson"]
+aiofile = ["aiofile"]
+all = ["orjson", "aiofile"]
 
 [build-system]
 requires = ["poetry-core"]
