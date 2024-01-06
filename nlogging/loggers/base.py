@@ -24,7 +24,7 @@ class BaseAsyncLogger(ABC):
         ...
 
     @abstractmethod
-    def filter(self, level: int) -> bool:
+    def _do_filtering(self, level: int) -> bool:
         ...
 
     @abstractmethod

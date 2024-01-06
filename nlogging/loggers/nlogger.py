@@ -31,7 +31,7 @@ class NLogger(BaseAsyncLogger):
     def level(self):
         return self._filter.level
 
-    def filter(self, level: int):
+    def _do_filtering(self, level: int):
         return self._filter.filter(level)
 
     async def debug(self, msg: "MessageType"):
@@ -131,7 +131,7 @@ class NLogger(BaseAsyncLogger):
     def _is_enabled_for(self, level: int):
         if self._disabled:
             return False
-        return self.filter(level)
+        return self._do_filtering(level)
 
     async def _disable(self):
         if self._disabled:
