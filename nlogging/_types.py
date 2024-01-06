@@ -92,5 +92,13 @@ class BackendProtocol(Protocol):
         ...
 
 
+class BinaryFileWrapperProtocol(Protocol):
+    async def write(self, msg: bytes) -> None:
+        ...
+
+    async def close(self) -> None:
+        ...
+
+
 type MessageType = str | dict
 type LevelType = int | Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
