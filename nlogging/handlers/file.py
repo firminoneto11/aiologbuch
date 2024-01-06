@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING
 from anyio import Lock
 
 from nlogging.handlers.backends import get_backend
-from nlogging.handlers.base import BaseAsyncHandler
+
+from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
     from nlogging._types import (

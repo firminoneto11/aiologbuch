@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from nlogging.formatters.base import BaseFormatter
+from .base import BaseFormatter
 
 if TYPE_CHECKING:
     from nlogging._types import LogRecordProtocol

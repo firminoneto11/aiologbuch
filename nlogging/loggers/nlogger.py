@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Optional
 from anyio import create_task_group
 
 from nlogging.levels import LogLevel
-from nlogging.loggers.base import BaseAsyncLogger
+
+from .base import BaseAsyncLogger
 
 if TYPE_CHECKING:
     from nlogging._types import (
