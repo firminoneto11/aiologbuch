@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from .filters import ExclusiveFilter, Filter
-from .formatters import JsonFormatter
+from .formatters import JsonFormatter, LineFormatter
 from .handlers import AsyncFileHandler, AsyncStreamHandler
 from .levels import check_level
 from .loggers import AsyncLoggerManagerSingleton, NLogger
@@ -29,20 +29,39 @@ def get_logger(
 
     :return: A NLogger instance.
     """
+    logger, created = _get_logger(name=name, level=level)
+
+    if created:
+        _setup_logger(logger=logger, filename=filename, exclusive=exclusive)
+
+    return logger
+
+
+def _get_logger(name: str, level: "LevelType" = "INFO"):
     level_ = check_level(level)
     manager = AsyncLoggerManagerSingleton[NLogger](logger_class=NLogger)
     logger, created = manager.get_logger(name=name, filter=Filter(level_))
 
-    if created:
-        logger._add_handler(
-            AsyncStreamHandler(filter=Filter(level_), formatter=JsonFormatter())
-        )
-        if filename:
-            filter_ = ExclusiveFilter(level=level_) if exclusive else Filter(level_)
-            logger._add_handler(
-                AsyncFileHandler(
-                    filename=filename, filter=filter_, formatter=JsonFormatter()
-                )
-            )
+    return logger, created
 
-    return logger
+
+def _setup_logger(logger: NLogger, filename: str, exclusive: bool):
+    formatter = JsonFormatter()
+    line_formatter = LineFormatter()  # noqa
+
+    logger._add_handler(
+        AsyncStreamHandler(filter=Filter(logger.level), formatter=formatter)
+    )
+
+    if filename:
+        logger._add_handler(
+            AsyncFileHandler(
+                filename=filename,
+                filter=(
+                    ExclusiveFilter(level=logger.level)
+                    if exclusive
+                    else Filter(logger.level)
+                ),
+                formatter=formatter,
+            )
+        )
