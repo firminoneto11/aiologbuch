@@ -7,7 +7,7 @@ env:
 	python3.12 -m venv venv
 
 deps:
-	poetry install --no-root
+	poetry install --no-root --all-extras
 
 cov:
 	$(cov)
