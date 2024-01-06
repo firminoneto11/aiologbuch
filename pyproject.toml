@@ -8,14 +8,17 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.12.*"
 anyio = "4.2.*"
-aiofile = "3.8.*"
+orjson = { version = "3.9.*", optional = true }
+aiofile = { version = "3.8.*", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 ruff = "0.1.*"
 pytest = "7.4.*"
 coverage = "7.3.*"
 pytest-sugar = "0.9.*"
-orjson = "3.9.*"
+
+[tool.poetry.extras]
+extra_tools = ["orjson", "aiofile"]
 
 [build-system]
 requires = ["poetry-core"]
