@@ -16,6 +16,7 @@ ruff = "0.1.*"
 pytest = "7.4.*"
 coverage = "7.3.*"
 pytest-sugar = "0.9.*"
+uvloop = "0.19.*"
 
 [tool.poetry.extras]
 orjson = ["orjson"]
