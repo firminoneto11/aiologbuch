@@ -1,13 +1,17 @@
-from pytest import fixture, mark
+from pytest import fixture, mark, param
 
 from nlogging.loggers import AsyncLoggerManagerSingleton
 
 pytestmark = [mark.anyio]
 
 
-@fixture
-def anyio_backend():
-    return "asyncio"
+@fixture(
+    params=[
+        param(("asyncio", {"use_uvloop": True}), id="asyncio+uvloop"),
+    ]
+)
+def anyio_backend(request):
+    return request.param
 
 
 @fixture
