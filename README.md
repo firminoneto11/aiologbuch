@@ -145,3 +145,7 @@ logger = get_logger(
 await logger.info("This won't be logged")
 await logger.error("This will be logged")
 ```
+
+## License
+
+This project is licensed under the terms of the MIT license.
