@@ -58,7 +58,7 @@ Now, let's talk about the properties you can set.
 
 ## Level
 
-The level property is used to specify the minimum level of logs that will be logged.
+The `level` property is used to specify the minimum level of logs that will be logged.
 
 ```python
 from nlogging import get_logger
@@ -103,7 +103,7 @@ again, but specifying a different name.
 
 ## Filename
 
-The filename property is used to specify the file where the logs will be written to.
+The `filename` property is used to specify the file where the logs will be written to.
 
 ```python
 from nlogging import get_logger
@@ -127,12 +127,12 @@ approach, provided by [`anyio`](https://anyio.readthedocs.io/en/stable/streams.h
 
 ## Exclusive
 
-The exclusive property is used to determine if the logger should log exclusively to the
+The `exclusive` property is used to determine if the logger should log exclusively to the
 level that it was specified. For example, if you set the level to `ERROR`, and the
-exclusive property to `True`, the logger will only log `ERROR` messages.
+`exclusive` property to `True`, the logger will only log `ERROR` messages.
 
 But, this will only be applied if you set a `filename`. Meaning that, if you don't set a
-`filename`, the logger will log to the `stderr` as if the exclusive property was set to
+`filename`, the logger will log to the `stderr` as if the `exclusive` property was set to
 `False`.
 
 So, if you want to log a level exclusively to a file, you can do something like this:
