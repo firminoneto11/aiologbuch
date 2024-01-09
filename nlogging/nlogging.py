@@ -37,12 +37,10 @@ def get_logger(
     return logger
 
 
-def _get_logger(name: str, level: "LevelType" = "INFO"):
+def _get_logger(name: str, level: "LevelType"):
     level_ = check_level(level)
     manager = AsyncLoggerManagerSingleton[NLogger](logger_class=NLogger)
-    logger, created = manager.get_logger(name=name, filter=Filter(level_))
-
-    return logger, created
+    return manager.get_logger(name=name, filter=Filter(level_))
 
 
 def _setup_logger(logger: NLogger, filename: str, exclusive: bool):
