@@ -127,24 +127,31 @@ approach, provided by [`anyio`](https://anyio.readthedocs.io/en/stable/streams.h
 ## Exclusive
 
 The exclusive property is used to determine if the logger should log exclusively to the
-level that was specified. For example, if you set the level to `ERROR`, and the exclusive
-property to `True`, the logger will only log `ERROR` messages.
+level that it was specified. For example, if you set the level to `ERROR`, and the
+exclusive property to `True`, the logger will only log `ERROR` messages.
 
-But, this will only be applied to the file logging. The `stderr` logging will always log
-all messages, because it is a single stream for the whole process.
+But, this will only be applied if you set a `filename`. Meaning that, if you don't set a
+`filename`, the logger will log to the `stderr` as if the exclusive property was set to
+`False`.
 
-So, if you want to log exclusively to a file, you can do something like this:
+So, if you want to log a level exclusively to a file, you can do something like this:
 
 ```python
 from nlogging import get_logger
 
-logger = get_logger(
-    name="my-cool-logger", level='ERROR', filename="my-cool-logger.log", exclusive=True
+error_logger = get_logger(
+    name="my-cool-logger",
+    level='ERROR',
+    filename="my-cool-error-logger.log",
+    exclusive=True,
 )
 
-await logger.info("This won't be logged")
-await logger.error("This will be logged")
+await error_logger.info("This won't be logged")
+await error_logger.error("This will be logged to the file")
 ```
+
+It's quite useful if you want to log errors to a file, but you still want to log
+everything else to the `stderr`.
 
 ## License
 
