@@ -50,8 +50,9 @@ again, but specifying a different name, to get a new logger instance.
 
 It's also worth mentioning that, if you call `get_logger` with the same name, it will
 return the same logger instance. This is to prevent having multiple loggers with the
-same name. But only the first logger instance will have the attributes you specified in
-the first call.
+same name, ensuring integrity. Only the first logger instance will have the attributes
+you specified in the first call. The other calls won't have any effect, besides returning
+the same logger instance.
 
 Now, let's talk about the properties you can set.
 
@@ -114,7 +115,7 @@ await logger.info("Hello, world!")
 
 As you can see, theres a parameter called `filename` that indicates the logger's
 filename. The default value is an empty string, but you can set it to any string, as
-long the value is a valid filename. If it doesn't exists, it will be created.
+long the value is a valid path filename. If it doesn't exists, it will be created.
 
 Once again, calling `get_logger` with the same name will return the same logger
 instance, so if you want to log to a different file, you have to call `get_logger`
@@ -147,11 +148,13 @@ error_logger = get_logger(
 )
 
 await error_logger.info("This won't be logged")
-await error_logger.error("This will be logged to the file")
+await error_logger.error("This will be logged only to the file")
 ```
 
-It's quite useful if you want to log errors to a file, but you still want to log
-everything else to the `stderr`.
+It's quite useful when you want to log only errors to a file.
+
+But keep in mind that if you wanna log the other levels, you have to create another
+logger instance, with a different name.
 
 ## License
 
