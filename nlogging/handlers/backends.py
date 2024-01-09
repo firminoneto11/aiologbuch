@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Optional
 
 from anyio.streams.file import FileWriteStream
 
@@ -29,7 +29,7 @@ def get_backend(name: Literal["thread", "aiofile"]) -> "BackendProtocol":
 @dataclass
 class AIOBackend:
     filename: str
-    _file_stream: "BinaryFileWrapperProtocol | None" = None
+    _file_stream: "Optional[BinaryFileWrapperProtocol]" = None
 
     async def init(self):
         if aopen is None:
@@ -52,7 +52,7 @@ class AIOBackend:
 @dataclass
 class ThreadBackend:
     filename: str
-    _file_stream: "FileWriteStream | None" = None
+    _file_stream: "Optional[FileWriteStream]" = None
 
     async def init(self):
         if not self._file_stream:

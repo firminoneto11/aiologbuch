@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from anyio import Lock
 
@@ -21,7 +21,7 @@ backend_class = get_backend("aiofile")
 @dataclass
 class _StreamResource:
     filename: str
-    backend: "BackendProtocol | None" = None
+    backend: "Optional[BackendProtocol]" = None
     _lock: Lock = None
 
     def __post_init__(self):
