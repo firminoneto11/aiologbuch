@@ -5,7 +5,7 @@ from nlogging.levels import check_level
 
 @mark.parametrize(
     argnames="value",
-    argvalues=[None, True, False, 1.0, (), [], {}],
+    argvalues=[None, 1.0, (), [], {}, object()],
 )
 def test_check_level_should_raise_if_level_is_not_int_or_str(value):
     with raises(TypeError) as exc_info:

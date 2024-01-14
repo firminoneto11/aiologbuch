@@ -1,17 +1,25 @@
-from pytest import fixture, mark, param
+import asyncio
+
+from pytest import fixture
+from uvloop import EventLoopPolicy
 
 from nlogging.loggers import AsyncLoggerManagerSingleton
 
-pytestmark = [mark.anyio]
 
+@fixture(scope="session", autouse=True)
+def event_loop():
+    asyncio.set_event_loop_policy(EventLoopPolicy())
+    loop = asyncio.new_event_loop()
 
-@fixture(
-    params=[
-        param(("asyncio", {"use_uvloop": True}), id="asyncio+uvloop"),
-    ]
-)
-def anyio_backend(request):
-    return request.param
+    yield loop
+
+    if loop.is_running():
+        loop.stop()
+
+    loop.run_until_complete(loop.shutdown_asyncgens())
+    loop.run_until_complete(loop.shutdown_default_executor())
+
+    loop.close()
 
 
 @fixture

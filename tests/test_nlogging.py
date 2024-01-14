@@ -38,7 +38,7 @@ def test_get_logger_with_name_should_return_a_new_logger(clean_up_manager: None)
         LogLevel.CRITICAL,
     ),
 )
-def test_get_logger_informing_level_should_only_change_default_logger_level(
+def test_get_logger_informing_level_should_not_change_logger_level(
     new_level: int,
 ):
     logger1 = get_logger(name="log")
@@ -46,8 +46,8 @@ def test_get_logger_informing_level_should_only_change_default_logger_level(
     logger2 = get_logger(name="log", level=new_level)
 
     assert logger1_level_before
-    assert logger1.level == new_level
-    assert logger2.level == new_level
+    assert logger1.level == LogLevel.INFO
+    assert logger2.level == LogLevel.INFO
     assert mem_addr(logger1) == mem_addr(logger2)
 
 
@@ -78,17 +78,19 @@ def test_get_logger_calling_same_name_should_always_return_same_logger(
         "last-one",
     ),
 )
-def test_get_logger_informing_different_level_and_same_name_should_only_change_level(
+def test_get_logger_informing_different_level_and_same_name_should_change_nothing(
     name: str, clean_up_manager: None
 ):
     loggers, assertions, ids = [], [], set()
 
+    lowest_level = LogLevel[LogLevel._member_names_[0]]
+
     for level in LogLevel._member_names_:
         logger = get_logger(name=name, level=level)
-        assertions.append(logger.level == LogLevel[level].value)
+        assertions.append(logger.level == lowest_level)
         ids.add(mem_addr(logger))
         loggers.append(logger)
 
-    assert all(logger.level == LogLevel.CRITICAL for logger in loggers)
+    assert all(logger.level == lowest_level for logger in loggers)
     assert all(assertions)
     assert len(ids) == 1
