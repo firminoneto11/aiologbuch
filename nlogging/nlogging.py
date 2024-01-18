@@ -48,18 +48,17 @@ def _setup_logger(logger: NLogger, filename: str, exclusive: bool):
     line_formatter = LineFormatter()  # noqa
 
     logger._add_handler(
-        AsyncStreamHandler(filter=Filter(logger.level), formatter=formatter)
+        stream_handler := AsyncStreamHandler(
+            filter=Filter(logger.level), formatter=formatter
+        )
     )
 
     if filename:
-        logger._add_handler(
-            AsyncFileHandler(
-                filename=filename,
-                filter=(
-                    ExclusiveFilter(level=logger.level)
-                    if exclusive
-                    else Filter(logger.level)
-                ),
-                formatter=formatter,
-            )
+        filter_ = (
+            ExclusiveFilter(level=logger.level) if exclusive else Filter(logger.level)
         )
+        logger._add_handler(
+            AsyncFileHandler(filename=filename, filter=filter_, formatter=formatter)
+        )
+        if exclusive:
+            logger._remove_handler(stream_handler)
