@@ -1,2 +1,1 @@
-from .levels import LogLevel  # noqa
-from .logging import get_logger  # noqa
+from .main import get_logger  # noqa
