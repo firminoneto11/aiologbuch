@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 def get_backend(name: Literal["thread", "aiofile"]) -> "BackendProtocol":
-    backends = {"thread": ThreadBackend, "aiofile": AIOBackend}
+    backends = {"thread": ThreadBackend, "aiofile": AIOFileBackend}
 
     backend_name = name.lower().strip()
     if (backend := backends.get(backend_name)) is None:
@@ -27,7 +27,7 @@ def get_backend(name: Literal["thread", "aiofile"]) -> "BackendProtocol":
 
 
 @dataclass
-class AIOBackend:
+class AIOFileBackend:
     filename: str
     _file_stream: "Optional[BinaryFileWrapperProtocol]" = None
 

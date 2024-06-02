@@ -1,18 +1,11 @@
 import atexit
-from typing import TYPE_CHECKING
 
 from asyncer import syncify
 
 from .manager import resource_manager
 
-if TYPE_CHECKING:
-    from aiologbuch.types import FilterProtocol, FormatterProtocol
-
 
 class AsyncStreamMixin:
-    def __init__(self, filter: "FilterProtocol", formatter: "FormatterProtocol"):
-        super().__init__(filter=filter, formatter=formatter)
-
     @property
     def manager(self):
         return resource_manager
