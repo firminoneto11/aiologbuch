@@ -38,20 +38,6 @@ test = ["anyio[trio]", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypo
 trio = ["trio (>=0.23)"]
 
 [[package]]
-name = "asyncer"
-version = "0.0.7"
-description = "Asyncer, async and await, focused on developer experience."
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "asyncer-0.0.7-py3-none-any.whl", hash = "sha256:f0d579d4f67c4ead52ede3a45c854f462cae569058a8a6a68a4ebccac1c335d8"},
-    {file = "asyncer-0.0.7.tar.gz", hash = "sha256:d5e563fb0f56eb87b97257984703658a4f5bbdb52ff851b3e8ed864cc200b1d2"},
-]
-
-[package.dependencies]
-anyio = ">=3.4.0,<5.0"
-
-[[package]]
 name = "caio"
 version = "0.9.13"
 description = "Asynchronous file IO for Linux MacOS or Windows."
@@ -421,4 +407,4 @@ orjson = ["orjson"]
 [metadata]
 lock-version = "2.0"
 python-versions = "3.12.*"
-content-hash = "652bad6047440164571d0f053c11b5e6453317d301e8248d247d8fe6ca7e0cb2"
+content-hash = "0e26bb00924486da8d50a12d52a1324fa589b857a8705b6dec152215d40e0f14"
