@@ -1,16 +1,15 @@
 from inspect import stack
 from logging import LogRecord
+from logging.levels import LogLevel
 from traceback import format_exception
 from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from nlogging.levels import LogLevel
-
 from .base import BaseAsyncLogger
 
 if TYPE_CHECKING:
-    from nlogging._types import (
+    from logging._types import (
         AsyncHandlerProtocol,
         CallerInfo,
         FilterProtocol,

@@ -1,9 +1,8 @@
 import asyncio
+from logging.loggers import AsyncLoggerManagerSingleton
 
 from pytest import fixture
 from uvloop import EventLoopPolicy
-
-from nlogging.loggers import AsyncLoggerManagerSingleton
 
 
 @fixture(scope="session", autouse=True)

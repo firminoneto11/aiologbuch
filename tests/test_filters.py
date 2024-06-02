@@ -1,9 +1,8 @@
+from logging.filters import Filter
+from logging.levels import LogLevel
 from unittest.mock import MagicMock
 
 from pytest import mark
-
-from nlogging.filters import Filter
-from nlogging.levels import LogLevel
 
 
 @mark.unit

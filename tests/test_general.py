@@ -1,26 +1,43 @@
+from logging import get_logger
+
 from pytest import mark
 
-from nlogging.loggers import NLogger, SyncNLogger
+
+def func(a, b):
+    return a / b
 
 
-@mark.one
-def test_sync_nlogger():
-    logger = SyncNLogger.create_logger("test_sync_nlogger", "DEBUG")
-    logger.debug("test_sync_nlogger")
-    logger.info("test_sync_nlogger")
-    logger.warning("test_sync_nlogger")
-    logger.error("test_sync_nlogger")
-    logger.exception("test_sync_nlogger")
-    logger.critical("test_sync_nlogger")
+async def nested(c, logger):
+    try:
+        func(5, c)
+    except ZeroDivisionError as exc:
+        await logger.error("What?!", exc)
 
 
-@mark.two
-async def test_async_file_logging():
-    logger = NLogger.create_logger(name="1", level="DEBUG")
+@mark.damn
+async def test_async_nlogger(clean_up_manager):
+    logger = get_logger(name="1", level="DEBUG")
 
-    await logger.debug("test_sync_nlogger")
-    await logger.info("test_sync_nlogger")
-    await logger.warning("test_sync_nlogger")
-    await logger.error("test_sync_nlogger")
-    await logger.exception("test_sync_nlogger")
-    await logger.critical("test_sync_nlogger")
+    await logger.debug("debug async msg")
+    await logger.info("info async msg")
+    await logger.warning("warning async msg")
+    await logger.error("error async msg")
+    await logger.critical("critical async msg")
+
+
+@mark.damn
+async def test_async_nlogger_with_file_handler(clean_up_manager):
+    logger = get_logger(name="2", level="DEBUG", filename="log.log")
+
+    await logger.debug("debug async msg")
+    await logger.info("info async msg")
+    await logger.warning("warning async msg")
+    await logger.error("error async msg")
+    await logger.critical("critical async msg")
+
+
+@mark.damn
+async def test_logger_exc(clean_up_manager):
+    logger = get_logger(name="3", level="DEBUG")
+
+    await nested(0, logger)

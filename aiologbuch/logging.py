@@ -7,7 +7,7 @@ from .levels import check_level
 from .loggers import AsyncLoggerManagerSingleton, NLogger
 
 if TYPE_CHECKING:
-    from ._types import LevelType
+    from .types_ import LevelType
 
 
 def get_logger(

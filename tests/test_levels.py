@@ -1,6 +1,6 @@
-from pytest import mark, raises
+from logging.levels import check_level
 
-from nlogging.levels import check_level
+from pytest import mark, raises
 
 
 @mark.parametrize(

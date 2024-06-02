@@ -1,6 +1,6 @@
-from setuptools import find_packages, setup
+from logging import __version__
 
-from nlogging import __version__
+from setuptools import find_packages, setup
 
 with open("README.md") as f:
     long_description = f.read()

@@ -28,7 +28,7 @@ $ pip install nlogging[all]
 It's as simple as this:
 
 ```python
-from nlogging import get_logger
+from logging import get_logger
 
 logger = get_logger(name="my-cool-logger")
 
@@ -61,7 +61,7 @@ Now, let's talk about the properties you can set.
 The `level` property is used to specify the minimum level of logs that will be logged.
 
 ```python
-from nlogging import get_logger
+from logging import get_logger
 
 logger = get_logger(name="my-cool-logger", level="INFO")
 
@@ -89,7 +89,7 @@ If you prefer, you can also import an enum called `LogLevel` from the `nlogging`
 module, and use it instead.
 
 ```python
-from nlogging import get_logger, LogLevel
+from logging import get_logger, LogLevel
 
 logger = get_logger(name="my-cool-logger", level=LogLevel.INFO)
 
@@ -106,7 +106,7 @@ again, but specifying a different name.
 The `filename` property is used to specify the file where the logs will be written to.
 
 ```python
-from nlogging import get_logger
+from logging import get_logger
 
 logger = get_logger(name="my-cool-logger", filename="my-cool-logger.log")
 
@@ -138,7 +138,7 @@ But, this will only be applied if you set a `filename`. Meaning that, if you don
 So, if you want to log a level exclusively to a file, you can do something like this:
 
 ```python
-from nlogging import get_logger
+from logging import get_logger
 
 error_logger = get_logger(
     name="my-cool-logger",

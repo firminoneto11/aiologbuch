@@ -7,7 +7,7 @@ from .backends import get_backend
 from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from nlogging._types import (
+    from logging._types import (
         BackendProtocol,
         FilterProtocol,
         FormatterProtocol,

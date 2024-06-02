@@ -1,15 +1,14 @@
 from asyncio import StreamWriter, get_running_loop, sleep
 from asyncio.protocols import Protocol
 from dataclasses import dataclass
+from logging.shared import get_stderr_lock
 from sys import stderr
 from typing import TYPE_CHECKING
-
-from nlogging.shared import get_stderr_lock
 
 from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from nlogging._types import FilterProtocol, FormatterProtocol
+    from logging._types import FilterProtocol, FormatterProtocol
 
 
 class _AIOProto(Protocol):

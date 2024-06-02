@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Self
 
 if TYPE_CHECKING:
-    from nlogging._types import LoggerProtocol
+    from aiologbuch.types_ import LoggerProtocol
 
 
 class AsyncLoggerManagerSingleton[LC: "LoggerProtocol"]:
