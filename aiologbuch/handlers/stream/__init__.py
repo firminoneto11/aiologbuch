@@ -1,2 +1,2 @@
-from .async_ import AsyncStreamHandler  # noqa
-from .sync import SyncStreamHandler  # noqa
+from .async_ import AsyncStreamMixin  # noqa
+from .sync import SyncStreamMixin  # noqa

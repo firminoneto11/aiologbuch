@@ -36,24 +36,16 @@ class BaseHandler:
 
 
 class BaseAsyncHandler(BaseHandler):
+    async def handle(self, record: "LogRecordProtocol"):
+        if self.filter.filter(record):
+            await self.emit(record)
+
     async def emit(self, record: "LogRecordProtocol"):
         try:
             msg = self.format(record) + self.terminator
             await self.write_and_flush(msg)
         except:  # noqa
             await self.handle_error(record)
-
-    async def write_and_flush(self, msg: bytes) -> None:
-        raise NotImplementedError(
-            "'write_and_flush' must be implemented by Handler subclasses"
-        )
-
-    async def close(self) -> None:
-        raise NotImplementedError("'close' must be implemented by Handler subclasses")
-
-    async def handle(self, record: "LogRecordProtocol"):
-        if self.filter.filter(record):
-            await self.emit(record)
 
     async def handle_error(self, record: "LogRecordProtocol"):
         if RAISE_EXCEPTIONS:
@@ -62,24 +54,16 @@ class BaseAsyncHandler(BaseHandler):
 
 
 class BaseSyncHandler(BaseHandler):
+    def handle(self, record: "LogRecordProtocol"):
+        if self.filter.filter(record):
+            self.emit(record)
+
     def emit(self, record: "LogRecordProtocol"):
         try:
             msg = self.format(record) + self.terminator
             self.write_and_flush(msg)
         except:  # noqa
             self.handle_error(record)
-
-    def write_and_flush(self, msg: bytes) -> None:
-        raise NotImplementedError(
-            "'write_and_flush' must be implemented by Handler subclasses"
-        )
-
-    def close(self) -> None:
-        raise NotImplementedError("'close' must be implemented by Handler subclasses")
-
-    def handle(self, record: "LogRecordProtocol"):
-        if self.filter.filter(record):
-            self.emit(record)
 
     def handle_error(self, record: "LogRecordProtocol"):
         if RAISE_EXCEPTIONS:
