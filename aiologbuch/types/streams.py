@@ -1,7 +1,7 @@
 from typing import Protocol, Self
 
 
-class BackendProtocol(Protocol):
+class StreamProtocol(Protocol):
     def __call__(self, filename: str) -> Self:
         ...
 
