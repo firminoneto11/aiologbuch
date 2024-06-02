@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Protocol, Self
 
 if TYPE_CHECKING:
+    from .filters import FilterProtocol
     from .general import LoggerKind
-    from .types_ import FilterProtocol
 
 
 class BaseLoggerProtocol(Protocol):
