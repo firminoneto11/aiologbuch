@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     )
 
 
-class NLogger(BaseAsyncLogger):
+class AsyncLogger(BaseAsyncLogger):
     def __init__(self, name: str, filter: "FilterProtocol"):
         self.name = name
 

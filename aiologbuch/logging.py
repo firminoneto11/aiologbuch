@@ -1,17 +1,50 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, overload
 
-from .filters import ExclusiveFilter, Filter
-from .formatters import JsonFormatter, LineFormatter
-from .handlers import AsyncFileHandler, AsyncStreamHandler
+# from .filters import ExclusiveFilter
+from .filters import Filter
+
+# from .formatters import JsonFormatter, LineFormatter
+# from .handlers import AsyncFileHandler, AsyncStreamHandler
 from .levels import check_level
-from .loggers import AsyncLoggerManagerSingleton, NLogger
+from .loggers import AsyncLogger, SyncLogger
+from .managers import get_logger_manager
 
 if TYPE_CHECKING:
-    from .types_ import LevelType
+    from .types import LevelType
+
+
+async_manager = get_logger_manager(AsyncLogger)
+sync_manager = get_logger_manager(SyncLogger)
+
+
+@overload
+def get_logger(
+    name: str,
+    level: "LevelType" = "INFO",
+    filename: str = "",
+    exclusive: bool = False,
+    kind: Literal["async"] = "async",
+) -> AsyncLogger:
+    ...
+
+
+@overload
+def get_logger(
+    name: str,
+    level: "LevelType" = "INFO",
+    filename: str = "",
+    exclusive: bool = False,
+    kind: Literal["sync"] = "sync",
+) -> SyncLogger:
+    ...
 
 
 def get_logger(
-    name: str, level: "LevelType" = "INFO", filename: str = "", exclusive: bool = False
+    name: str,
+    level: "LevelType" = "INFO",
+    filename: str = "",
+    exclusive: bool = False,
+    kind: Literal["async", "sync"] = "async",
 ):
     """
     This function is used to get a logger instance. If you inform the same name, it
@@ -26,39 +59,39 @@ def get_logger(
     :param exclusive: If True, the logger will only log the messages that are \
         exclusively for the level chosen. Only works with a 'filename' specified.\
         Default is False.
+    :param kind: Determines the kind of the logger that will be returned, either a \
+        sync or an async logger. The possible values are 'async' and 'sync'. The \
+        default value is 'async'.
 
-    :return: A NLogger instance.
+    :returns: A logger instance.
     """
-    logger, created = _get_logger(name=name, level=level)
+    level = check_level(level=level)
+    manager = async_manager if kind == "async" else sync_manager
+    logger, created = manager.get_logger(name=name, filter=Filter(level))
 
     if created:
-        _setup_logger(logger=logger, filename=filename, exclusive=exclusive)
+        # _setup_logger(logger=logger, filename=filename, exclusive=exclusive)
+        ...
 
     return logger
 
 
-def _get_logger(name: str, level: "LevelType"):
-    level_ = check_level(level)
-    manager = AsyncLoggerManagerSingleton[NLogger](logger_class=NLogger)
-    return manager.get_logger(name=name, filter=Filter(level_))
+# def _setup_logger(logger: NLogger, filename: str, exclusive: bool):
+#     formatter = JsonFormatter()
+#     line_formatter = LineFormatter()  # noqa
 
+#     logger._add_handler(
+#         stream_handler := AsyncStreamHandler(
+#             filter=Filter(logger.level), formatter=formatter
+#         )
+#     )
 
-def _setup_logger(logger: NLogger, filename: str, exclusive: bool):
-    formatter = JsonFormatter()
-    line_formatter = LineFormatter()  # noqa
-
-    logger._add_handler(
-        stream_handler := AsyncStreamHandler(
-            filter=Filter(logger.level), formatter=formatter
-        )
-    )
-
-    if filename:
-        filter_ = (
-            ExclusiveFilter(level=logger.level) if exclusive else Filter(logger.level)
-        )
-        logger._add_handler(
-            AsyncFileHandler(filename=filename, filter=filter_, formatter=formatter)
-        )
-        if exclusive:
-            logger._remove_handler(stream_handler)
+#     if filename:
+#         filter_ = (
+#             ExclusiveFilter(level=logger.level) if exclusive else Filter(logger.level)
+#         )
+#         logger._add_handler(
+#             AsyncFileHandler(filename=filename, filter=filter_, formatter=formatter)
+#         )
+#         if exclusive:
+#             logger._remove_handler(stream_handler)

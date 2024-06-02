@@ -7,7 +7,7 @@ from .backends import get_backend
 from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from aiologbuch._types import (
+    from aiologbuch.types import (
         BackendProtocol,
         FilterProtocol,
         FormatterProtocol,

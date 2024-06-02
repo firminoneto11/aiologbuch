@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from sys import stderr
 from typing import TYPE_CHECKING
 
-from aiologbuch.shared import get_stderr_lock
+from aiologbuch.shared import STDERR_LOCK
 
 from .base import BaseAsyncHandler
 
 if TYPE_CHECKING:
-    from aiologbuch._types import FilterProtocol, FormatterProtocol
+    from aiologbuch.types import FilterProtocol, FormatterProtocol
 
 
 class _AIOProto(Protocol):
@@ -32,7 +32,7 @@ class _ResourceManager:
 
     @property
     def lock(self):
-        return get_stderr_lock()
+        return STDERR_LOCK
 
     async def send_message(self, msg: bytes):
         async with self.lock:

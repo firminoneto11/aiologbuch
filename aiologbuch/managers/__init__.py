@@ -1,16 +1,13 @@
 from functools import lru_cache
 
-from aiologbuch.types import AsyncLoggerProtocol, SyncLoggerProtocol
+from aiologbuch.types import BaseLoggerProtocol
 
-from .async_ import AsyncLoggerManager
-from .sync import SyncLoggerManager
-
-
-@lru_cache(maxsize=1, typed=True)
-def get_async_manager[T: AsyncLoggerProtocol](logger_class: T):
-    return AsyncLoggerManager(logger_class)
+from .async_ import AsyncLoggerManager as _AsyncManager
+from .sync import SyncLoggerManager as _SyncManager
 
 
-@lru_cache(maxsize=1, typed=True)
-def get_sync_manager[T: SyncLoggerProtocol](logger_class: T):
-    return SyncLoggerManager(logger_class)
+@lru_cache(maxsize=2, typed=True)
+def get_logger_manager[T: BaseLoggerProtocol](logger_class: T):
+    if logger_class.kind == "async":
+        return _AsyncManager(logger_class)
+    return _SyncManager(logger_class)

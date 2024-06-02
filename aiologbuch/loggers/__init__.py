@@ -1,2 +1,2 @@
-from .manager import AsyncLoggerManagerSingleton  # noqa
-from .nlogger import NLogger  # noqa
+from .async_ import AsyncLogger  # noqa
+from .sync import SyncLogger  # noqa

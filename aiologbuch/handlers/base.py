@@ -6,10 +6,10 @@ from warnings import warn
 from anyio.to_thread import run_sync
 
 from aiologbuch import Handler
-from aiologbuch.shared import RAISE_EXCEPTIONS, get_stderr_lock
+from aiologbuch.shared import RAISE_EXCEPTIONS, STDERR_LOCK
 
 if TYPE_CHECKING:
-    from aiologbuch._types import FilterProtocol, FormatterProtocol, LogRecordProtocol
+    from aiologbuch.types import FilterProtocol, FormatterProtocol, LogRecordProtocol
 
 
 @lru_cache(maxsize=1)
@@ -56,7 +56,7 @@ class BaseAsyncHandler:
 
     async def handle_error(self, record: "LogRecordProtocol"):
         if RAISE_EXCEPTIONS:
-            async with get_stderr_lock():
+            async with STDERR_LOCK:
                 await run_sync(Handler.handleError, None, record)
 
     def __del__(self):
