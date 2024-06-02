@@ -1,4 +1,3 @@
-from functools import lru_cache
 from logging import Handler
 from typing import TYPE_CHECKING
 
@@ -11,25 +10,12 @@ if TYPE_CHECKING:
     from aiologbuch.types import FilterProtocol, FormatterProtocol, LogRecordProtocol
 
 
-@lru_cache(maxsize=1)
-def _handler_id_generator():
-    i = 1
-    while True:
-        yield i
-        i += 1
-
-
 class BaseHandler:
     terminator = b"\n"
 
     def __init__(self, filter: "FilterProtocol", formatter: "FormatterProtocol"):
-        self._id = next(_handler_id_generator())
         self.formatter = formatter
         self.filter = filter
-
-    @property
-    def id(self):
-        return self._id
 
     def format(self, record: "LogRecordProtocol"):
         return self.formatter.format(record)
