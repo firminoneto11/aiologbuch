@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.12.*"
 anyio = "4.2.*"
+asyncer = "0.0.7"
 orjson = { version = "3.9.*", optional = true }
 aiofile = { version = "3.8.*", optional = true }
 

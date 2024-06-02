@@ -1,11 +1,10 @@
-from asyncio import create_task
 from functools import lru_cache
+from logging import Handler
 from typing import TYPE_CHECKING
-from warnings import warn
 
 from anyio.to_thread import run_sync
+from asyncer import syncify
 
-from aiologbuch import Handler
 from aiologbuch.shared import RAISE_EXCEPTIONS, STDERR_LOCK
 
 if TYPE_CHECKING:
@@ -20,7 +19,7 @@ def _handler_id_generator():
         i += 1
 
 
-class BaseAsyncHandler:
+class BaseHandler:
     terminator = b"\n"
 
     def __init__(self, filter: "FilterProtocol", formatter: "FormatterProtocol"):
@@ -32,6 +31,11 @@ class BaseAsyncHandler:
     def id(self):
         return self._id
 
+    def format(self, record: "LogRecordProtocol"):
+        return self.formatter.format(record)
+
+
+class BaseAsyncHandler(BaseHandler):
     async def emit(self, record: "LogRecordProtocol"):
         try:
             msg = self.format(record) + self.terminator
@@ -47,9 +51,6 @@ class BaseAsyncHandler:
     async def close(self) -> None:
         raise NotImplementedError("'close' must be implemented by Handler subclasses")
 
-    def format(self, record: "LogRecordProtocol"):
-        return self.formatter.format(record)
-
     async def handle(self, record: "LogRecordProtocol"):
         if self.filter.filter(record):
             await self.emit(record)
@@ -59,12 +60,31 @@ class BaseAsyncHandler:
             async with STDERR_LOCK:
                 await run_sync(Handler.handleError, None, record)
 
-    def __del__(self):
+
+class BaseSyncHandler(BaseHandler):
+    def emit(self, record: "LogRecordProtocol"):
         try:
-            create_task(self.close())
-        except RuntimeError:
-            warn(
-                ResourceWarning(
-                    "Event loop is closed. Handler resources may not be closed properly"
-                )
-            )
+            msg = self.format(record) + self.terminator
+            self.write_and_flush(msg)
+        except:  # noqa
+            self.handle_error(record)
+
+    def write_and_flush(self, msg: bytes) -> None:
+        raise NotImplementedError(
+            "'write_and_flush' must be implemented by Handler subclasses"
+        )
+
+    def close(self) -> None:
+        raise NotImplementedError("'close' must be implemented by Handler subclasses")
+
+    def handle(self, record: "LogRecordProtocol"):
+        if self.filter.filter(record):
+            self.emit(record)
+
+    def handle_error(self, record: "LogRecordProtocol"):
+        if RAISE_EXCEPTIONS:
+            syncify(STDERR_LOCK.acquire)()
+            try:
+                Handler.handleError(None, record)
+            finally:
+                syncify(STDERR_LOCK.release)()

@@ -1,2 +1,2 @@
-from .file import AsyncFileHandler  # noqa
-from .stream import AsyncStreamHandler  # noqa
+from .file import AsyncFileHandler, SyncFileHandler  # noqa
+from .stream import AsyncStreamHandler, SyncStreamHandler  # noqa

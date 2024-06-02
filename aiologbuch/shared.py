@@ -12,4 +12,4 @@ def _parse_bool(value: str):
 
 STDERR_LOCK = Lock()
 
-RAISE_EXCEPTIONS = _parse_bool(getenv("NLOGGING_RAISE_EXCEPTIONS", "true"))
+RAISE_EXCEPTIONS = _parse_bool(getenv("AIOLOGBUCH_RAISE_EXCEPTIONS", "true"))
