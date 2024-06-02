@@ -1,87 +1,95 @@
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from anyio import Lock
 
-from .backends import get_backend
+from aiologbuch.shared import STREAM_BACKEND
+
+from .backends import get_stream_backend
 
 if TYPE_CHECKING:
-    from aiologbuch.types import BackendProtocol, MapType
+    from aiologbuch.types import StreamProtocol
 
 
-backend_class = get_backend("aiofile")
-
-
-@dataclass
-class _StreamResource:
-    filename: str
-    backend: "Optional[BackendProtocol]" = None
-    _lock: Lock = None
-
-    def __post_init__(self):
-        self._lock = Lock()
-
-    async def init_stream(self):
-        async with self._lock:
-            if not self.backend:
-                self.backend = backend_class(filename=self.filename)
-                await self.backend.init()
-
-    async def send(self, msg: bytes):
-        async with self._lock:
-            if not self.backend:
-                raise RuntimeError("Stream is not initialized")
-            await self.backend.send(msg)
-
-    async def close(self):
-        async with self._lock:
-            if self.backend:
-                await self.backend.close()
-                self.backend = None
-
-
-@dataclass
 class _ResourceManager:
-    _map: dict[str, "MapType"] = None
-    _lock: Lock = None
+    _lock: Lock
+    _resources: dict[str, "_StreamResource"]
 
-    def __post_init__(self):
+    def __init__(self):
         self._lock = Lock()
-        self._map = {}
+        self._resources = dict()
 
     @property
-    def map(self):
-        return self._map
+    def resources(self):
+        return self._resources
 
-    async def request_resource(self, filename: str):
-        async with self._lock:
-            if content := self.map.get(filename):
-                resource = content["resource"]
-                content["reference_count"] += 1
-            else:
+    @property
+    def lock(self):
+        return self._lock
+
+    async def aopen_stream(self, filename: str):
+        async with self.lock:
+            if (resource := self.resources.get(filename)) is None:
                 resource = _StreamResource(filename=filename)
-                self.map[filename] = {"resource": resource, "reference_count": 1}
+                self.resources[filename] = resource
+            resource.reference_count += 1
 
-        await resource.init_stream()
+        await resource.open()
 
-    async def send_message(self, filename: str, msg: bytes):
-        async with self._lock:
-            if not (content := self.map.get(filename)):
-                raise RuntimeError("Resource is not initialized")
+    async def asend_message(self, filename: str, msg: bytes):
+        async with self.lock:
+            if (resource := self.resources.get(filename)) is None:
+                raise RuntimeError(f"{filename!r}'s stream was not initialized")
 
-        await content["resource"].send(msg)
+        await resource.send(msg=msg)
 
-    async def close_resource(self, filename: str):
-        resource = None
+    async def aclose_stream(self, filename: str):
+        stream = None
 
-        async with self._lock:
-            if content := self.map.get(filename):
-                content["reference_count"] -= 1
-                if content["reference_count"] <= 0:
-                    resource = self.map.pop(filename)["resource"]
+        async with self.lock:
+            if resource := self.resources.get(filename):
+                resource.reference_count -= 1
+                if resource.reference_count <= 0:
+                    stream = self.resources.pop(filename)
 
-        if resource:
-            await resource.close()
+        if stream:
+            await stream.close()
 
 
-resource_manager = _ResourceManager()
+class _StreamResource:
+    _lock: Lock
+    _filename: str
+    _stream: "StreamProtocol"
+    reference_count: int
+
+    def __init__(self, filename: str):
+        self._lock = Lock()
+        self._filename = filename
+        self._stream = _Stream(filename=self.filename)
+        self.reference_count = 0
+
+    @property
+    def lock(self):
+        return self._lock
+
+    @property
+    def filename(self):
+        return self._filename
+
+    @property
+    def stream(self):
+        return self._stream
+
+    async def open(self):
+        async with self.lock:
+            await self.stream.open()
+
+    async def send(self, msg: bytes):
+        async with self.lock:
+            await self.stream.send(msg)
+
+    async def close(self):
+        async with self.lock:
+            await self.stream.close()
+
+
+_Stream, resource_manager = get_stream_backend(STREAM_BACKEND), _ResourceManager()
