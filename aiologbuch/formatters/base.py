@@ -3,7 +3,7 @@ from time import strftime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aiologbuch._types import LogRecordProtocol
+    from aiologbuch.types import LogRecordProtocol
 
 
 class BaseFormatter:
@@ -15,7 +15,7 @@ class BaseFormatter:
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()
 
     def format(self, record: "LogRecordProtocol") -> bytes:
-        raise NotImplementedError("format() must be implemented in subclass")
+        raise NotImplementedError("format() must be implemented in subclasses")
 
     def format_time(self, record: "LogRecordProtocol"):
         timestamp = strftime(self.DEFAULT_DATE_FORMAT, self.converter(record.created))

@@ -1,12 +1,6 @@
 from typing import Protocol, Self, TypedDict
 
 
-class CallerInfo(TypedDict):
-    caller_filename: str
-    caller_function_name: str
-    caller_line_number: int
-
-
 class MapType(TypedDict):
     resource: "_ResourceProtocol"
     reference_count: int

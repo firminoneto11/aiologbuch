@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base import BaseFormatter
 
 if TYPE_CHECKING:
-    from aiologbuch._types import LogRecordProtocol
+    from aiologbuch.types import LogRecordProtocol
 
 
 # NOTE: orjson is optional, but it's faster than stdlib json

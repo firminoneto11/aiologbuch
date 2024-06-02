@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base import BaseFormatter
 
 if TYPE_CHECKING:
-    from aiologbuch._types import LogRecordProtocol
+    from aiologbuch.types import LogRecordProtocol
 
 
 class LineFormatter(BaseFormatter):
@@ -22,7 +22,7 @@ class LineFormatter(BaseFormatter):
         }
 
         if record.exc_text:
-            log_data["exception"] = "\n" + record.exc_text
+            log_data["exception"] = record.exc_text
 
         log = ""
         for idx, key in enumerate(log_data):
