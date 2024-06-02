@@ -13,10 +13,10 @@ class BaseLoggerProtocol(Protocol):
 
 
 class AsyncLoggerProtocol(BaseLoggerProtocol):
-    async def disable(self) -> None:
+    async def _disable(self) -> None:
         ...
 
 
 class SyncLoggerProtocol(BaseLoggerProtocol):
-    def disable(self) -> None:
+    def _disable(self) -> None:
         ...

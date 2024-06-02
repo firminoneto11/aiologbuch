@@ -5,12 +5,8 @@ if TYPE_CHECKING:
 
 
 class AsyncHandlerProtocol(Protocol):
-    @property
-    def id(self) -> int:
+    async def handle(self, record: "LogRecordProtocol") -> None:
         ...
 
     async def close(self) -> None:
-        ...
-
-    async def handle(self, record: "LogRecordProtocol") -> None:
         ...

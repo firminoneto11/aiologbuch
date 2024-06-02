@@ -6,6 +6,6 @@ type LoggerKind = Literal["async", "sync"]
 
 
 class CallerInfo(TypedDict):
-    caller_filename: str
-    caller_function_name: str
-    caller_line_number: int
+    filename: str
+    function_name: str
+    line_number: int
