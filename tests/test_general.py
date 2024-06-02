@@ -14,7 +14,6 @@ async def nested(c, logger):
         await logger.error("What?!", exc)
 
 
-@mark.damn
 async def test_async_nlogger(clean_up_manager):
     logger = get_logger(name="1", level="DEBUG")
 
@@ -25,7 +24,6 @@ async def test_async_nlogger(clean_up_manager):
     await logger.critical("critical async msg")
 
 
-@mark.damn
 async def test_async_nlogger_with_file_handler(clean_up_manager):
     logger = get_logger(name="2", level="DEBUG", filename="log.log")
 
@@ -36,7 +34,6 @@ async def test_async_nlogger_with_file_handler(clean_up_manager):
     await logger.critical("critical async msg")
 
 
-@mark.damn
 async def test_logger_exc(clean_up_manager):
     logger = get_logger(name="3", level="DEBUG")
 
