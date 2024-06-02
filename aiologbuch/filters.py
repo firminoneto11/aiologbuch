@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from logging._types import LogRecordProtocol
+    from aiologbuch._types import LogRecordProtocol
 
 
 class Filter:

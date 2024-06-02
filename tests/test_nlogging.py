@@ -1,8 +1,8 @@
-from logging import get_logger
-from logging.levels import LogLevel
-from logging.loggers import NLogger
-
 from pytest import mark
+
+from aiologbuch import get_logger
+from aiologbuch.levels import LogLevel
+from aiologbuch.loggers import NLogger
 
 
 def mem_addr(obj: object):

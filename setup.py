@@ -1,6 +1,6 @@
-from logging import __version__
-
 from setuptools import find_packages, setup
+
+from aiologbuch import __version__
 
 with open("README.md") as f:
     long_description = f.read()

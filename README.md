@@ -1,4 +1,4 @@
-# nlogging
+# aiologbuch
 
 ### A native asyncio logging library for python.
 
@@ -8,19 +8,19 @@ Just a quick note, this is still a work in progress.
 
 ```bash
 # pip
-$ pip install nlogging
+$ pip install aiologbuch
 
 # poetry
-$ poetry add nlogging
+$ poetry add aiologbuch
 
 # If you want to use a faster json parsing
-$ pip install nlogging[orjson]
+$ pip install aiologbuch[orjson]
 
 # If you want to use a native asyncio file handling
-$ pip install nlogging[aiofile]
+$ pip install aiologbuch[aiofile]
 
 # If you want to use both
-$ pip install nlogging[all]
+$ pip install aiologbuch[all]
 ```
 
 ## Usage
@@ -28,7 +28,7 @@ $ pip install nlogging[all]
 It's as simple as this:
 
 ```python
-from logging import get_logger
+from aiologbuch import get_logger
 
 logger = get_logger(name="my-cool-logger")
 
@@ -61,7 +61,7 @@ Now, let's talk about the properties you can set.
 The `level` property is used to specify the minimum level of logs that will be logged.
 
 ```python
-from logging import get_logger
+from aiologbuch import get_logger
 
 logger = get_logger(name="my-cool-logger", level="INFO")
 
@@ -85,11 +85,11 @@ The default value is `INFO`, but you can set it to any of the following values:
 You can either use the literal string, or the corresponding constant from the `logging`
 module.
 
-If you prefer, you can also import an enum called `LogLevel` from the `nlogging`
+If you prefer, you can also import an enum called `LogLevel` from the `aiologbuch`
 module, and use it instead.
 
 ```python
-from logging import get_logger, LogLevel
+from aiologbuch import get_logger, LogLevel
 
 logger = get_logger(name="my-cool-logger", level=LogLevel.INFO)
 
@@ -106,7 +106,7 @@ again, but specifying a different name.
 The `filename` property is used to specify the file where the logs will be written to.
 
 ```python
-from logging import get_logger
+from aiologbuch import get_logger
 
 logger = get_logger(name="my-cool-logger", filename="my-cool-logger.log")
 
@@ -138,7 +138,7 @@ But, this will only be applied if you set a `filename`. Meaning that, if you don
 So, if you want to log a level exclusively to a file, you can do something like this:
 
 ```python
-from logging import get_logger
+from aiologbuch import get_logger
 
 error_logger = get_logger(
     name="my-cool-logger",

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from logging._types import (
+    from aiologbuch._types import (
         AsyncHandlerProtocol,
         CallerInfo,
         FilterProtocol,

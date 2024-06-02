@@ -1,8 +1,9 @@
-from logging.filters import Filter
-from logging.levels import LogLevel
 from unittest.mock import MagicMock
 
 from pytest import mark
+
+from aiologbuch.filters import Filter
+from aiologbuch.levels import LogLevel
 
 
 @mark.unit

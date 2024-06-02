@@ -1,6 +1,6 @@
-from logging import get_logger
-
 from pytest import mark
+
+from aiologbuch import get_logger
 
 
 def func(a, b):

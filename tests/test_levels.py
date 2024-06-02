@@ -1,6 +1,6 @@
-from logging.levels import check_level
-
 from pytest import mark, raises
+
+from aiologbuch.levels import check_level
 
 
 @mark.parametrize(

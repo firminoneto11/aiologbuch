@@ -10,7 +10,7 @@ except ImportError:
     aopen = None
 
 if TYPE_CHECKING:
-    from logging._types import BackendProtocol, BinaryFileWrapperProtocol
+    from aiologbuch._types import BackendProtocol, BinaryFileWrapperProtocol
 
 
 def get_backend(name: Literal["thread", "aiofile"]) -> "BackendProtocol":
