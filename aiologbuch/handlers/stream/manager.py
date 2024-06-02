@@ -4,9 +4,8 @@ from asyncio.protocols import Protocol
 from dataclasses import dataclass
 from typing import Optional, TextIO
 
-from asyncer import syncify
-
 from aiologbuch.shared import STDERR_LOCK
+from aiologbuch.vendor.asyncer import syncify
 
 
 class _AIOProto(Protocol):

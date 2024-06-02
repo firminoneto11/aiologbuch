@@ -1,6 +1,6 @@
 import atexit
 
-from asyncer import syncify
+from aiologbuch.vendor.asyncer import syncify
 
 from .manager import resource_manager
 

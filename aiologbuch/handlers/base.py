@@ -3,9 +3,9 @@ from logging import Handler
 from typing import TYPE_CHECKING
 
 from anyio.to_thread import run_sync
-from asyncer import syncify
 
 from aiologbuch.shared import RAISE_EXCEPTIONS, STDERR_LOCK
+from aiologbuch.vendor.asyncer import syncify
 
 if TYPE_CHECKING:
     from aiologbuch.types import FilterProtocol, FormatterProtocol, LogRecordProtocol
