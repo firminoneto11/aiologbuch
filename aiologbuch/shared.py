@@ -13,3 +13,5 @@ def _parse_bool(value: str):
 STDERR_LOCK = Lock()
 
 RAISE_EXCEPTIONS = _parse_bool(getenv("AIOLOGBUCH_RAISE_EXCEPTIONS", "true"))
+
+STREAM_BACKEND = getenv("AIOLOGBUCH_STREAM_BACKEND", "thread").lower().strip()
