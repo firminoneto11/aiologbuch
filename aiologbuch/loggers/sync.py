@@ -1,2 +1,2 @@
 class SyncLogger:
-    ...
+    kind = "sync"
