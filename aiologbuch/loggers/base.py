@@ -42,7 +42,14 @@ class BaseLogger[HandlerProtocol]:
             info, text = None, None
 
         record = LogRecord(
-            name, level, filename, line_number, msg, None, function_name, info
+            name=name,
+            level=level,
+            pathname=filename,
+            lineno=line_number,
+            msg=msg,
+            args=None,
+            exc_info=info,
+            func=function_name,
         )
 
         if text:
