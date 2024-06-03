@@ -39,7 +39,7 @@ extend-select = ["E501"]
 # Pytest configs
 [tool.pytest.ini_options]
 addopts = "-s -v --durations=5"
-markers = ["unit", "integration", "e2e"]
+markers = ["unit", "integration", "e2e", "bug", "this"]
 asyncio_mode = "auto"
 
 # Coverage configs
