@@ -1,3 +1,5 @@
+import json
+import re
 from typing import TYPE_CHECKING
 
 from .base import BaseFormatter
@@ -6,16 +8,12 @@ if TYPE_CHECKING:
     from aiologbuch.types import LogRecordProtocol
 
 
-# NOTE: orjson is optional, but it's faster than stdlib json
-try:
-    import orjson as json
-except ImportError:
-    import json
-
-
 class JsonFormatter(BaseFormatter):
+    def _ensure_safe(self, text: str):
+        return re.sub(r"\\", r"\\\\", text)
+
     def format(self, record: "LogRecordProtocol"):
-        log_data = {
+        data = {
             "timestamp": self.format_time(record),
             "level": record.levelname,
             "process_id": record.process,
@@ -25,15 +23,8 @@ class JsonFormatter(BaseFormatter):
             "filename": record.pathname,
             "function_name": record.funcName,
             "line_number": record.lineno,
-            "message": record.getMessage(),
+            "traceback": record.exc_text,
+            "message": record.msg,
         }
 
-        if record.exc_text:
-            log_data["exception"] = record.exc_text
-
-        log = json.dumps(log_data)
-
-        if isinstance(log, str):
-            return log.encode()
-
-        return bytes(log)
+        return self._ensure_safe(json.dumps(data)).encode()
