@@ -1,4 +1,7 @@
-from typing import Optional, Protocol
+from typing import TYPE_CHECKING, Optional, Protocol
+
+if TYPE_CHECKING:
+    from .general import MessageType
 
 
 class LogRecordProtocol(Protocol):
@@ -14,6 +17,4 @@ class LogRecordProtocol(Protocol):
     funcName: str
     lineno: int
     exc_text: Optional[str]
-
-    def getMessage(self) -> str:
-        ...
+    msg: "MessageType"
