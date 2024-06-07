@@ -3,7 +3,7 @@ import atexit
 from .manager import resource_manager
 
 
-class SyncStreamMixin:
+class SyncStderrMixin:
     @property
     def manager(self):
         return resource_manager

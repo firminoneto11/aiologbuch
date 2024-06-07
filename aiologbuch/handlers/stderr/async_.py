@@ -5,7 +5,7 @@ from aiologbuch.vendor.asyncer import syncify
 from .manager import resource_manager
 
 
-class AsyncStreamMixin:
+class AsyncStderrMixin:
     @property
     def manager(self):
         return resource_manager
@@ -14,5 +14,4 @@ class AsyncStreamMixin:
         await self.manager.asend_message(msg)
 
     async def close(self):
-        func = syncify(self.manager.aclose)
-        atexit.register(func)
+        atexit.register(syncify(self.manager.aclose))

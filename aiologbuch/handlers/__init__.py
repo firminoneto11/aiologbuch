@@ -3,21 +3,18 @@ from typing import TYPE_CHECKING as _TypeChecking
 from .base import BaseAsyncHandler as _BaseAsync
 from .base import BaseSyncHandler as _BaseSync
 from .file import AsyncFileMixin as _AsyncFileMixin
-from .stream import AsyncStreamMixin as _AsyncStreamMixin
-from .stream import SyncStreamMixin as _SyncStreamMixin
-
-# from .file import SyncFileMixin as _SyncFileMixin
-
+from .stderr import AsyncStderrMixin as _AsyncStderrMixin
+from .stderr import SyncStderrMixin as _SyncStderrMixin
 
 if _TypeChecking:
     from aiologbuch.types import FilterProtocol, FormatterProtocol
 
 
-class AsyncStreamHandler(_BaseAsync, _AsyncStreamMixin):
+class AsyncStderrHandler(_BaseAsync, _AsyncStderrMixin):
     ...
 
 
-class SyncStreamHandler(_BaseSync, _SyncStreamMixin):
+class SyncStderrHandler(_BaseSync, _SyncStderrMixin):
     ...
 
 

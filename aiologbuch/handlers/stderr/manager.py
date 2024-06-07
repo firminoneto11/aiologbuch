@@ -15,7 +15,7 @@ class _AIOProto(Protocol):
 
     async def _get_close_waiter(self, transport: StreamWriter):
         while transport.transport._pipe is not None:
-            await sleep(0)  # Skips one event loop iteration
+            await sleep(0)  # NOTE: Skips one event loop iteration
 
 
 @contextmanager
