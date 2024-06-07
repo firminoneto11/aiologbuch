@@ -8,7 +8,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.12.*"
 anyio = "4.2.*"
-orjson = { version = "3.9.*", optional = true }
 aiofile = { version = "3.8.*", optional = true }
 
 [tool.poetry.group.dev.dependencies]
@@ -20,9 +19,8 @@ uvloop = "0.19.*"
 pytest-asyncio = "0.23.*"
 
 [tool.poetry.extras]
-orjson = ["orjson"]
 aiofile = ["aiofile"]
-all = ["orjson", "aiofile"]
+all = ["aiofile"]
 
 [build-system]
 requires = ["poetry-core"]
