@@ -38,6 +38,20 @@ test = ["anyio[trio]", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypo
 trio = ["trio (>=0.23)"]
 
 [[package]]
+name = "asgiref"
+version = "3.8.1"
+description = "ASGI specs, helper code, and adapters"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "asgiref-3.8.1-py3-none-any.whl", hash = "sha256:3e1e3ecc849832fe52ccf2cb6686b7a55f82bb1d6aee72a58826471390335e47"},
+    {file = "asgiref-3.8.1.tar.gz", hash = "sha256:c343bd80a0bec947a9860adb4c432ffa7db769836c64238fc34bdc3fec84d590"},
+]
+
+[package.extras]
+tests = ["mypy (>=0.800)", "pytest", "pytest-asyncio"]
+
+[[package]]
 name = "caio"
 version = "0.9.13"
 description = "Asynchronous file IO for Linux MacOS or Windows."
@@ -347,4 +361,4 @@ all = ["aiofile"]
 [metadata]
 lock-version = "2.0"
 python-versions = "3.12.*"
-content-hash = "020eb8e5870dca223c510d5d125c37e8a637ace4a3cf0015e16e6d653b0d3b35"
+content-hash = "135499807b8b3ee71dc16b5330ccde9a72dd85cfa2860e2b22ba7c85b144bd2a"
