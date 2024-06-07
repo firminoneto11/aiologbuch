@@ -20,13 +20,3 @@ class BaseFormatter:
     def format_time(self, record: "LogRecordProtocol"):
         timestamp = strftime(self.DEFAULT_DATE_FORMAT, self.converter(record.created))
         return self.DEFAULT_MSEC_FORMAT % (timestamp, record.msecs)
-
-    def _ensure_bytes(self, log: str | bytes):
-        if isinstance(log, bytes):
-            return log
-        if isinstance(log, str):
-            return log.encode()
-
-        raise TypeError(
-            f"Serialized object must be of str or bytes type, not {type(log)}"
-        )

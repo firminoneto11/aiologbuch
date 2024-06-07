@@ -31,4 +31,9 @@ class JsonFormatter(BaseFormatter):
         if record.exc_text:
             log_data["exception"] = record.exc_text
 
-        return self._ensure_bytes(log=json.dumps(log_data))
+        log = json.dumps(log_data)
+
+        if isinstance(log, str):
+            return log.encode()
+
+        return bytes(log)

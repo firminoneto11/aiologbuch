@@ -30,4 +30,4 @@ class LineFormatter(BaseFormatter):
             if not idx == len(log_data) - 1:
                 log += " | "
 
-        return self._ensure_bytes(log=log)
+        return log.encode()

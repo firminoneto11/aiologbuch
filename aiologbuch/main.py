@@ -1,10 +1,10 @@
+from inspect import currentframe, getmodule
 from typing import TYPE_CHECKING, Literal, overload
 
 # from .filters import ExclusiveFilter
 from .filters import Filter
-
-# from .formatters import JsonFormatter, LineFormatter
-# from .handlers import AsyncFileHandler, AsyncStreamHandler
+from .formatters import JsonFormatter, LineFormatter
+from .handlers import AsyncFileHandler, AsyncStreamHandler
 from .levels import check_level
 from .loggers import AsyncLogger, SyncLogger
 from .managers import get_logger_manager
@@ -19,7 +19,7 @@ sync_manager = get_logger_manager(SyncLogger)
 
 @overload
 def get_logger(
-    name: str,
+    name: str = "",
     level: "LevelType" = "INFO",
     filename: str = "",
     exclusive: bool = False,
@@ -30,7 +30,7 @@ def get_logger(
 
 @overload
 def get_logger(
-    name: str,
+    name: str = "",
     level: "LevelType" = "INFO",
     filename: str = "",
     exclusive: bool = False,
@@ -40,7 +40,7 @@ def get_logger(
 
 
 def get_logger(
-    name: str,
+    name: str = "",
     level: "LevelType" = "INFO",
     filename: str = "",
     exclusive: bool = False,
@@ -50,8 +50,7 @@ def get_logger(
     This function is used to get a logger instance. If you inform the same name, it
     will always return the same logger.
 
-    The only required field is 'name', which is used to identify the logger. If you
-    don't inform a 'filename', the logger will only log to 'sys.stderr'.
+    If you don't inform a 'filename', the logger will only log to 'sys.stderr'.
 
     :param name: The name of the logger.
     :param level: The level of the logger. Default is INFO.
@@ -65,33 +64,34 @@ def get_logger(
 
     :returns: A logger instance.
     """
+    if not name:
+        name = getmodule(currentframe().f_back).__name__
+
     level = check_level(level=level)
     manager = async_manager if kind == "async" else sync_manager
-    logger, created = manager.get_logger(name=name, filter=Filter(level))
+    logger, created = manager.get_logger(name=name)
 
     if created:
-        # _setup_logger(logger=logger, filename=filename, exclusive=exclusive)
-        ...
+        print("created here")
+        _setup_logger(logger=logger, level=level)
 
     return logger
 
 
-# def _setup_logger(logger: NLogger, filename: str, exclusive: bool):
-#     formatter = JsonFormatter()
-#     line_formatter = LineFormatter()  # noqa
+def _setup_logger(logger: AsyncLogger, level: int):
+    formatter = JsonFormatter()
+    # line_formatter = LineFormatter()  # noqa
 
-#     logger._add_handler(
-#         stream_handler := AsyncStreamHandler(
-#             filter=Filter(logger.level), formatter=formatter
-#         )
-#     )
+    stderr_handler = AsyncStreamHandler(filter=Filter(level), formatter=formatter)
 
-#     if filename:
-#         filter_ = (
-#             ExclusiveFilter(level=logger.level) if exclusive else Filter(logger.level)
-#         )
-#         logger._add_handler(
-#             AsyncFileHandler(filename=filename, filter=filter_, formatter=formatter)
-#         )
-#         if exclusive:
-#             logger._remove_handler(stream_handler)
+    logger._add_handler(stderr_handler)
+
+    # if filename:
+    #     filter_ = (
+    #         ExclusiveFilter(level=logger.level) if exclusive else Filter(logger.level)
+    #     )
+    #     logger._add_handler(
+    #         AsyncFileHandler(filename=filename, filter=filter_, formatter=formatter)
+    #     )
+    #     if exclusive:
+    #         logger._remove_handler(stream_handler)
