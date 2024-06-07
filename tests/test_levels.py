@@ -1,6 +1,6 @@
 from pytest import mark, raises
 
-from aiologbuch.levels import check_level
+from aiologbuch.shared.levels import check_level
 
 
 @mark.parametrize(

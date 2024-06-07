@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from aiologbuch.levels import LogLevel
+from aiologbuch.shared.levels import LogLevel
 from aiologbuch.shared.types import AsyncHandlerProtocol
 
 from .base import BaseLogger

@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Literal, overload
 from .filters import Filter
 from .formatters import JsonFormatter
 from .handlers import AsyncStderrHandler
-from .levels import check_level
 from .loggers import AsyncLogger, SyncLogger
 from .managers import get_logger_manager
+from .shared.levels import check_level
 
 if TYPE_CHECKING:
     from .shared.types import LevelType
