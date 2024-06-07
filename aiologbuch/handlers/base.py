@@ -7,15 +7,14 @@ from aiologbuch.shared import RAISE_EXCEPTIONS, STDERR_LOCK
 from aiologbuch.vendor.asyncer import syncify
 
 if TYPE_CHECKING:
-    from aiologbuch.types import FilterProtocol, FormatterProtocol, LogRecordProtocol
+    from aiologbuch.types import FormatterProtocol, LogRecordProtocol
 
 
 class BaseHandler:
     terminator = b"\n"
 
-    def __init__(self, filter: "FilterProtocol", formatter: "FormatterProtocol"):
+    def __init__(self, formatter: "FormatterProtocol"):
         self.formatter = formatter
-        self.filter = filter
 
     def format(self, record: "LogRecordProtocol"):
         return self.formatter.format(record)
@@ -23,10 +22,6 @@ class BaseHandler:
 
 class BaseAsyncHandler(BaseHandler):
     async def handle(self, record: "LogRecordProtocol"):
-        if self.filter.filter(record):
-            await self.emit(record)
-
-    async def emit(self, record: "LogRecordProtocol"):
         try:
             msg = self.format(record) + self.terminator
             await self.write_and_flush(msg)
@@ -41,10 +36,6 @@ class BaseAsyncHandler(BaseHandler):
 
 class BaseSyncHandler(BaseHandler):
     def handle(self, record: "LogRecordProtocol"):
-        if self.filter.filter(record):
-            self.emit(record)
-
-    def emit(self, record: "LogRecordProtocol"):
         try:
             msg = self.format(record) + self.terminator
             self.write_and_flush(msg)
