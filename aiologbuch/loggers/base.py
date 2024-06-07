@@ -1,10 +1,18 @@
-from inspect import stack
+from dataclasses import dataclass
+from inspect import currentframe
 from logging import LogRecord
 from traceback import format_exception
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from aiologbuch.types import CallerInfo, LoggerKind, LogRecordProtocol, MessageType
+    from aiologbuch.types import FilterProtocol, LoggerKind, MessageType
+
+
+@dataclass
+class _StackFrame:
+    filename: str
+    function_name: str
+    line_number: int
 
 
 class BaseLogger[HandlerProtocol]:
@@ -13,17 +21,31 @@ class BaseLogger[HandlerProtocol]:
     kind: "LoggerKind"
     name: str
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, filter_: "FilterProtocol"):
         self.name = name
         self._handlers = set()
+        self._filter_object = filter_
 
-    def _find_caller(self) -> "CallerInfo":
-        frame = stack()[3]  # 3 frames up from this one is the original caller
-        return {
-            "filename": frame.filename,
-            "function_name": frame.function,
-            "line_number": frame.lineno,
-        }
+    def _filter(self, level: int):
+        return self._filter_object.filter(level=level)
+
+    def _find_caller(self):
+        # NOTE: The caller frame is located 3 frames up from the current one, which is
+        # the one that calls 'debug', 'info', 'warning' and so on.
+        caller_frame, CALLER_FRAME_LEVEL = currentframe(), 3
+        try:
+            for _ in range(CALLER_FRAME_LEVEL):
+                caller_frame = caller_frame.f_back
+            if caller_frame is None:
+                raise ValueError()
+        except (AttributeError, ValueError) as exc:
+            raise RuntimeError("Could not find the caller's frame") from exc
+
+        return _StackFrame(
+            filename=caller_frame.f_code.co_filename,
+            function_name=caller_frame.f_code.co_name,
+            line_number=caller_frame.f_lineno,
+        )
 
     def _make_record(
         self,
@@ -34,7 +56,7 @@ class BaseLogger[HandlerProtocol]:
         function_name: str,
         line_number: int,
         exc_info: Optional[BaseException] = None,
-    ) -> "LogRecordProtocol":
+    ):
         if exc_info:
             info = (type(exc_info), exc_info, exc_info.__traceback__)
             text = "".join(format_exception(exc_info, limit=None, chain=True))
