@@ -1,4 +1,4 @@
-from aiologbuch.types import BaseLoggerProtocol
+from aiologbuch.types import BaseLoggerProtocol, FilterProtocol
 
 
 class BaseLoggerManager[T: BaseLoggerProtocol]:
@@ -17,11 +17,9 @@ class BaseLoggerManager[T: BaseLoggerProtocol]:
     def logger_class(self):
         return self._logger_class
 
-    def get_logger(self, name: str) -> tuple[T, bool]:
+    def get_logger(self, name: str, filter_: FilterProtocol):
         created = False
-        if name in self.loggers:
-            return self.loggers[name], created
+        if name not in self.loggers:
+            self.loggers[name], created = self.logger_class(name, filter_), True
 
-        self.loggers[name], created = (logger := self.logger_class(name)), True
-
-        return logger, created
+        return self.loggers[name], created
