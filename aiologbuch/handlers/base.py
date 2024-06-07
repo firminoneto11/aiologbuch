@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 
 from anyio.to_thread import run_sync
 
-from aiologbuch.shared import RAISE_EXCEPTIONS, STDERR_LOCK
+from aiologbuch.shared.conf import RAISE_EXCEPTIONS, STDERR_LOCK
 from aiologbuch.vendor.asyncer import syncify
 
 if TYPE_CHECKING:
-    from aiologbuch.types import FormatterProtocol, LogRecordProtocol
+    from aiologbuch.shared.types import FormatterProtocol, LogRecordProtocol
 
 
 class BaseHandler:

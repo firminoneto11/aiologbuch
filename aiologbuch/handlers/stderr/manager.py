@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional, TextIO
 
-from aiologbuch.shared import STDERR_LOCK
+from aiologbuch.shared.conf import STDERR_LOCK
 from aiologbuch.vendor.asyncer import syncify
 
 

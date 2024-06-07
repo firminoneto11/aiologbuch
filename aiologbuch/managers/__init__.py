@@ -1,6 +1,6 @@
 from functools import lru_cache as _lru_cache
 
-from aiologbuch.types import BaseLoggerProtocol as _BaseLoggerProtocol
+from aiologbuch.shared.types import BaseLoggerProtocol as _BaseLoggerProtocol
 
 from .async_ import AsyncLoggerManager as _AsyncManager
 from .sync import SyncLoggerManager as _SyncManager

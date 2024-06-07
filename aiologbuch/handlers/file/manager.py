@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING
 
 from anyio import Lock
 
-from aiologbuch.shared import STREAM_BACKEND
+from aiologbuch.shared.conf import STREAM_BACKEND
 
 from .backends import get_stream_backend
 
 if TYPE_CHECKING:
-    from aiologbuch.types import StreamProtocol
+    from aiologbuch.shared.types import StreamProtocol
 
 
 class _ResourceManager:

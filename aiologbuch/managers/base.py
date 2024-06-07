@@ -1,4 +1,4 @@
-from aiologbuch.types import BaseLoggerProtocol, FilterProtocol
+from aiologbuch.shared.types import BaseLoggerProtocol, FilterProtocol
 
 
 class BaseLoggerManager[T: BaseLoggerProtocol]:

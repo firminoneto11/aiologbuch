@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base import BaseFormatter
 
 if TYPE_CHECKING:
-    from aiologbuch.types import LogRecordProtocol
+    from aiologbuch.shared.types import LogRecordProtocol
 
 
 class LineFormatter(BaseFormatter):

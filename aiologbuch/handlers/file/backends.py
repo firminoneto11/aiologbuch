@@ -10,7 +10,7 @@ except ImportError:
 
 
 if TYPE_CHECKING:
-    from aiologbuch.types import BinaryFileWrapperProtocol, StreamProtocol
+    from aiologbuch.shared.types import BinaryFileWrapperProtocol, StreamProtocol
 
 
 def get_stream_backend(name: Literal["thread", "aiofile"]) -> "StreamProtocol":

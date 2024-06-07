@@ -3,7 +3,7 @@ from time import strftime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aiologbuch.types import LogRecordProtocol
+    from aiologbuch.shared.types import LogRecordProtocol
 
 
 class BaseFormatter:

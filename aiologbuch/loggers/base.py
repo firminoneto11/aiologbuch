@@ -5,7 +5,7 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from aiologbuch.types import FilterProtocol, LoggerKind, MessageType
+    from aiologbuch.shared.types import FilterProtocol, LoggerKind, MessageType
 
 
 @dataclass

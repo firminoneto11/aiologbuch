@@ -1,16 +1,20 @@
 from inspect import currentframe, getmodule
 from typing import TYPE_CHECKING, Literal, overload
 
-# from .filters import ExclusiveFilter
 from .filters import Filter
-from .formatters import JsonFormatter, LineFormatter
-from .handlers import AsyncFileHandler, AsyncStreamHandler
+from .formatters import JsonFormatter
+from .handlers import AsyncStderrHandler
 from .levels import check_level
 from .loggers import AsyncLogger, SyncLogger
 from .managers import get_logger_manager
 
 if TYPE_CHECKING:
-    from .types import LevelType
+    from .shared.types import LevelType
+
+
+# TODO: Make sure that users can globally configure:
+# - kind
+# - formatter
 
 
 async_manager = get_logger_manager(AsyncLogger)
@@ -65,33 +69,27 @@ def get_logger(
     :returns: A logger instance.
     """
     if not name:
-        name = getmodule(currentframe().f_back).__name__
+        try:
+            if (frame := currentframe().f_back) is None:
+                raise ValueError()
+        except (AttributeError, ValueError) as exc:
+            raise RuntimeError("Could not find the caller's frame") from exc
 
-    level = check_level(level=level)
+        if (module := getmodule(frame)) is None:
+            raise RuntimeError("Could not find the caller's module")
+
+        name = module.__name__
+
+    filter_ = Filter(level=check_level(level=level))
     manager = async_manager if kind == "async" else sync_manager
-    logger, created = manager.get_logger(name=name)
+    logger, created = manager.get_logger(name=name, filter_=filter_)
 
-    if created:
-        print("created here")
-        _setup_logger(logger=logger, level=level)
+    if created and kind == "async":
+        _setup_async_logger(logger=logger)
 
     return logger
 
 
-def _setup_logger(logger: AsyncLogger, level: int):
-    formatter = JsonFormatter()
-    # line_formatter = LineFormatter()  # noqa
-
-    stderr_handler = AsyncStreamHandler(filter=Filter(level), formatter=formatter)
-
+def _setup_async_logger(logger: AsyncLogger):
+    stderr_handler = AsyncStderrHandler(formatter=JsonFormatter())
     logger._add_handler(stderr_handler)
-
-    # if filename:
-    #     filter_ = (
-    #         ExclusiveFilter(level=logger.level) if exclusive else Filter(logger.level)
-    #     )
-    #     logger._add_handler(
-    #         AsyncFileHandler(filename=filename, filter=filter_, formatter=formatter)
-    #     )
-    #     if exclusive:
-    #         logger._remove_handler(stream_handler)

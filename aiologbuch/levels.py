@@ -3,7 +3,7 @@ from enum import IntEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aiologbuch.types import LevelType
+    from aiologbuch.shared.types import LevelType
 
 
 class LogLevel(IntEnum):

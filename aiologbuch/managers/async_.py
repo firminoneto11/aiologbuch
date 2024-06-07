@@ -1,4 +1,4 @@
-from aiologbuch.types import AsyncLoggerProtocol
+from aiologbuch.shared.types import AsyncLoggerProtocol
 
 from .base import BaseLoggerManager
 

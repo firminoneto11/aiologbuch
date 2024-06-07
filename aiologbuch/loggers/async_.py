@@ -3,12 +3,12 @@ from typing import TYPE_CHECKING, Optional
 from anyio import create_task_group
 
 from aiologbuch.levels import LogLevel
-from aiologbuch.types import AsyncHandlerProtocol
+from aiologbuch.shared.types import AsyncHandlerProtocol
 
 from .base import BaseLogger
 
 if TYPE_CHECKING:
-    from aiologbuch.types import LogRecordProtocol, MessageType
+    from aiologbuch.shared.types import LogRecordProtocol, MessageType
 
 
 class AsyncLogger(BaseLogger[AsyncHandlerProtocol]):

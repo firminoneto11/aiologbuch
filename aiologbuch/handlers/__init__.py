@@ -7,7 +7,7 @@ from .stderr import AsyncStderrMixin as _AsyncStderrMixin
 from .stderr import SyncStderrMixin as _SyncStderrMixin
 
 if _TypeChecking:
-    from aiologbuch.types import FilterProtocol, FormatterProtocol
+    from aiologbuch.shared.types import FilterProtocol, FormatterProtocol
 
 
 class AsyncStderrHandler(_BaseAsync, _AsyncStderrMixin):

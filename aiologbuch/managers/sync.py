@@ -1,4 +1,4 @@
-from aiologbuch.types import SyncLoggerProtocol
+from aiologbuch.shared.types import SyncLoggerProtocol
 
 from .base import BaseLoggerManager
 
