@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Literal, overload
 
 from .filters import Filter
 from .formatters import JsonFormatter
-from .handlers import AsyncStderrHandler
+from .handlers import AsyncStderrHandler, SyncStderrHandler
 from .loggers import AsyncLogger, SyncLogger
 from .managers import get_logger_manager
 from .shared.levels import check_level
@@ -84,12 +84,20 @@ def get_logger(
     manager = async_manager if kind == "async" else sync_manager
     logger, created = manager.get_logger(name=name, filter_=filter_)
 
-    if created and kind == "async":
-        _setup_async_logger(logger=logger)
+    if created:
+        if kind == "async":
+            _setup_async_logger(logger=logger)
+        else:
+            _setup_sync_logger(logger=logger)
 
     return logger
 
 
 def _setup_async_logger(logger: AsyncLogger):
     stderr_handler = AsyncStderrHandler(formatter=JsonFormatter())
+    logger._add_handler(stderr_handler)
+
+
+def _setup_sync_logger(logger: SyncLogger):
+    stderr_handler = SyncStderrHandler(formatter=JsonFormatter())
     logger._add_handler(stderr_handler)
