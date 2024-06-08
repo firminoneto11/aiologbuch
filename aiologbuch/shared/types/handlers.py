@@ -10,3 +10,11 @@ class AsyncHandlerProtocol(Protocol):
 
     async def close(self) -> None:
         ...
+
+
+class SyncHandlerProtocol(Protocol):
+    def handle(self, record: "LogRecordProtocol") -> None:
+        ...
+
+    def close(self) -> None:
+        ...

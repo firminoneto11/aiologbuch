@@ -47,7 +47,7 @@ class _ResourceManager:
         with sync_stderr_lock():
             if self.closed:
                 raise RuntimeError("Writer was closed")
-            self.stream.write(msg)
+            self.stream.write(msg.decode())
             self.stream.flush()
 
     # NOTE: Is it wise to close the sys.stderr?
