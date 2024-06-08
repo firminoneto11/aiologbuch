@@ -4,7 +4,8 @@ from asyncio.protocols import Protocol
 from dataclasses import dataclass
 from typing import Optional, TextIO
 
-from .lock import async_stderr_lock, sync_stderr_lock
+from aiologbuch.shared.conf import GLOBAL_STDERR_LOCK
+from aiologbuch.shared.utils import async_lock_context, sync_lock_context
 
 
 class _AIOProto(Protocol):
@@ -27,7 +28,7 @@ class _ResourceManager:
         return self._closed
 
     async def asend_message(self, msg: bytes):
-        async with async_stderr_lock():
+        async with async_lock_context(lock=GLOBAL_STDERR_LOCK):
             if self.closed:
                 raise RuntimeError("Writer was closed")
 
@@ -44,7 +45,7 @@ class _ResourceManager:
             await self._writer.drain()
 
     def send_message(self, msg: bytes):
-        with sync_stderr_lock():
+        with sync_lock_context(lock=GLOBAL_STDERR_LOCK):
             if self.closed:
                 raise RuntimeError("Writer was closed")
             self.stream.write(msg.decode())
@@ -53,7 +54,7 @@ class _ResourceManager:
     # NOTE: Is it wise to close the sys.stderr?
 
     async def aclose(self):
-        async with async_stderr_lock():
+        async with async_lock_context(lock=GLOBAL_STDERR_LOCK):
             if (self.closed) or (not self._writer):
                 return
 
@@ -65,7 +66,7 @@ class _ResourceManager:
             self._writer, self._closed = None, True
 
     def close(self):
-        with sync_stderr_lock():
+        with sync_lock_context(lock=GLOBAL_STDERR_LOCK):
             if self.closed:
                 return
             self.stream.write("Closing stderr...")
