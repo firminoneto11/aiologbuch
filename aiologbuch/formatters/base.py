@@ -10,6 +10,7 @@ class BaseFormatter:
     # NOTE: The default datetime format follows ISO 8601 using UTC time zone.
     DEFAULT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
     DEFAULT_MSEC_FORMAT = "%s.%03dZ"
+    TERMINATOR = b"\n"
 
     def converter(self, secs: float):
         return datetime.fromtimestamp(secs, tz=timezone.utc).timetuple()

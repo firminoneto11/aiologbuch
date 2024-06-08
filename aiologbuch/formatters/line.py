@@ -30,4 +30,4 @@ class LineFormatter(BaseFormatter):
             if not idx == len(log_data) - 1:
                 log += " | "
 
-        return log.encode()
+        return log.encode() + self.TERMINATOR

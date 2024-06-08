@@ -27,4 +27,4 @@ class JsonFormatter(BaseFormatter):
             "message": record.msg,
         }
 
-        return self._ensure_safe(json.dumps(data)).encode()
+        return self._ensure_safe(json.dumps(data)).encode() + self.TERMINATOR
