@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from io import TextIOWrapper
 from typing import TYPE_CHECKING, Literal, Optional
 
 from anyio.streams.file import FileWriteStream
@@ -66,3 +67,22 @@ class _AIOFileBackend:
         if self.stream:
             await self.stream.close()
             self.stream = None
+
+
+@dataclass
+class _SyncFileBackend:
+    filename: str
+    stream: Optional[TextIOWrapper] = None
+
+    def open(self):
+        if not self.stream:
+            self.stream = open(file=self.filename, mode="ab", encoding="utf-8")
+
+    def send(self, msg: bytes):
+        if not self.stream:
+            raise RuntimeError(f"{self.filename!r}'s stream was not initialized")
+        self.stream.write(msg)
+
+    def close(self):
+        if self.stream:
+            self.stream.close()
