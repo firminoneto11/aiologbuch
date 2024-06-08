@@ -4,4 +4,4 @@ from .filters import FilterProtocol  # noqa
 from .records import LogRecordProtocol  # noqa
 from .formatters import FormatterProtocol  # noqa
 from .handlers import AsyncHandlerProtocol, SyncHandlerProtocol  # noqa
-from .streams import StreamProtocol, BinaryFileWrapperProtocol  # noqa
+from .streams import AsyncStreamProtocol, SyncStreamProtocol, BinaryFileWrapperProtocol  # noqa
