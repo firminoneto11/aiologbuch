@@ -1,21 +1,20 @@
 [tool.poetry]
 name = "aiologbuch"
 version = "0.0.1"
-description = "A tiny logging tool for Python, heavily opinionated, but very easy to use."
+description = "A native asyncio logging library for python."
 authors = ["Firmino Neto <firminoneto@protonmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "3.12.*"
-anyio = "4.2.*"
-asgiref = "3.8.*"
+anyio = "4.4.*"
 aiofile = { version = "3.8.*", optional = true }
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.1.*"
-pytest = "7.4.*"
-coverage = "7.3.*"
-pytest-sugar = "0.9.*"
+ruff = "0.4.*"
+pytest = "8.2.*"
+coverage = "7.5.*"
+pytest-sugar = "1.0.*"
 uvloop = "0.19.*"
 pytest-asyncio = "0.23.*"
 
@@ -50,7 +49,7 @@ branch = true
 [tool.coverage.report]
 skip_covered = true
 precision = 2
-# fail_under = 90
+fail_under = 80
 exclude_also = ["if TYPE_CHECKING:"]
 
 [tool.coverage.html]
