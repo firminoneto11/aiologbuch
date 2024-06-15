@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from io import TextIOWrapper
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional, Union, cast, overload
 
 from anyio.streams.file import FileWriteStream
 
@@ -11,17 +11,30 @@ except ImportError:
 
 
 if TYPE_CHECKING:
-    from aiologbuch.shared.types import BinaryFileWrapperProtocol, StreamProtocol
+    from aiologbuch.shared.types import (
+        AsyncStreamProtocol,
+        BinaryFileWrapperProtocol,
+        SyncStreamProtocol,
+    )
+
+    @overload
+    def get_stream_backend(
+        name: Literal["thread", "aiofile"],
+    ) -> "AsyncStreamProtocol": ...
+
+    @overload
+    def get_stream_backend(name: Literal["sync"]) -> "SyncStreamProtocol": ...
 
 
-def get_stream_backend(name: Literal["thread", "aiofile"]) -> "StreamProtocol":
+def get_stream_backend(name: Literal["thread", "aiofile", "sync"]):
     backends = {
         "thread": _ThreadBackend,
         "aiofile": _AIOFileBackend,
+        "sync": _SyncFileBackend,
     }
 
     if backend := backends.get(name):
-        return backend
+        return cast(Union["AsyncStreamProtocol", "SyncStreamProtocol"], backend)
 
     raise ValueError(f"Unsupported stream backend: {name!r}")
 
@@ -86,3 +99,4 @@ class _SyncFileBackend:
     def close(self):
         if self.stream:
             self.stream.close()
+            self.stream = None
