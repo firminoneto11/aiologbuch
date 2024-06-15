@@ -1,5 +1,12 @@
 from .loggers import AsyncLoggerProtocol, SyncLoggerProtocol, BaseLoggerProtocol  # noqa
-from .general import LevelType, MessageType, LoggerKind  # noqa
+from .general import (  # noqa
+    LevelType,
+    MessageType,
+    LoggerMode,
+    StreamBackendType,
+    SyncStreamBackendType,
+    AsyncStreamBackendType,
+)
 from .filters import FilterProtocol  # noqa
 from .records import LogRecordProtocol  # noqa
 from .formatters import FormatterProtocol  # noqa

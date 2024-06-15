@@ -1,6 +1,7 @@
 from asyncio import Lock
 from os import getenv
-from typing import Literal
+
+from .types import AsyncStreamBackendType
 
 
 def _parse_bool(value: str):
@@ -12,8 +13,8 @@ def _parse_bool(value: str):
 
 GLOBAL_STDERR_LOCK = Lock()
 
-RAISE_EXCEPTIONS = _parse_bool(getenv("AIOLOGBUCH_RAISE_EXCEPTIONS", "true"))
+RAISE_EXCEPTIONS = _parse_bool(getenv("AIOLOGBUCH_RAISE_EXCEPTIONS", "1"))
 
-STREAM_BACKEND: Literal["thread", "aiofile"] = (
+STREAM_BACKEND: AsyncStreamBackendType = (
     getenv("AIOLOGBUCH_STREAM_BACKEND", "thread").lower().strip()
 )

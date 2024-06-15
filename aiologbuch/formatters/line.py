@@ -8,26 +8,15 @@ if TYPE_CHECKING:
 
 class LineFormatter(BaseFormatter):
     def format(self, record: "LogRecordProtocol"):
-        log_data = {
-            "timestamp": self.format_time(record),
-            "level": record.levelname,
-            "process_id": record.process,
-            "process_name": record.processName,
-            "thread_id": record.thread,
-            "thread_name": record.threadName,
-            "filename": record.pathname,
-            "function_name": record.funcName,
-            "line_number": record.lineno,
-            "message": record.msg,
-        }
+        data = self.prepare_record(record=record)
 
         if record.exc_text:
-            log_data["exception"] = record.exc_text
+            data["exception"] = record.exc_text
 
         log = ""
-        for idx, key in enumerate(log_data):
-            log += f"[{key}] {log_data[key]}"
-            if not idx == len(log_data) - 1:
+        for idx, key in enumerate(data):
+            log += f"[{key}] {data[key]}"
+            if not idx == len(data) - 1:
                 log += " | "
 
         return log.encode() + self.TERMINATOR

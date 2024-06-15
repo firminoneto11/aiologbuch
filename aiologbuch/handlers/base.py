@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from anyio.to_thread import run_sync
 
 from aiologbuch.shared.conf import GLOBAL_STDERR_LOCK, RAISE_EXCEPTIONS
-from aiologbuch.shared.utils import async_lock_context, sync_lock_context
+from aiologbuch.shared.utils import sync_lock_context
 
 if TYPE_CHECKING:
     from aiologbuch.shared.types import FormatterProtocol, LogRecordProtocol
@@ -28,7 +28,7 @@ class BaseAsyncHandler(BaseHandler):
 
     async def handle_error(self, record: "LogRecordProtocol"):
         if RAISE_EXCEPTIONS:
-            async with async_lock_context(lock=GLOBAL_STDERR_LOCK):
+            async with GLOBAL_STDERR_LOCK:
                 await run_sync(Handler.handleError, None, record)
 
 

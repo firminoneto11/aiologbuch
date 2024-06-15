@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, TextIO
 
 from aiologbuch.shared.conf import GLOBAL_STDERR_LOCK
-from aiologbuch.shared.utils import async_lock_context, sync_lock_context
+from aiologbuch.shared.utils import sync_lock_context
 
 
 class _AIOProto(Protocol):
@@ -27,7 +27,7 @@ class _ResourceManager:
         return self._closed
 
     async def asend_message(self, msg: bytes):
-        async with async_lock_context(lock=GLOBAL_STDERR_LOCK):
+        async with GLOBAL_STDERR_LOCK:
             if self.closed:
                 raise RuntimeError("Writer was closed")
 
@@ -51,7 +51,7 @@ class _ResourceManager:
             self.stream.flush()
 
     async def aclose(self):
-        async with async_lock_context(lock=GLOBAL_STDERR_LOCK):
+        async with GLOBAL_STDERR_LOCK:
             if (self.closed) or (not self._writer):
                 return
 

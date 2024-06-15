@@ -1,18 +1,11 @@
 from asyncio import Lock, get_running_loop
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import contextmanager
 from functools import wraps
 from typing import Awaitable, Callable
 
 from anyio.from_thread import start_blocking_portal
 
-
-class WouldDeadlock(Exception):
-    def __init__(self):
-        message = (
-            "Can not acquire the lock because it is currently being used by another "
-            "coroutine"
-        )
-        super().__init__(message)
+from .exceptions import WouldDeadlock
 
 
 def _thread_has_event_loop():
@@ -42,15 +35,6 @@ def sync_lock_context(lock: Lock):
     with start_blocking_portal() as portal:
         portal.call(lock.acquire)
 
-    try:
-        yield
-    finally:
-        lock.release()
-
-
-@asynccontextmanager
-async def async_lock_context(lock: Lock):
-    await lock.acquire()
     try:
         yield
     finally:

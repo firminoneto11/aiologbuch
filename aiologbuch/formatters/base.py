@@ -21,3 +21,19 @@ class BaseFormatter:
     def format_time(self, record: "LogRecordProtocol"):
         timestamp = strftime(self.DEFAULT_DATE_FORMAT, self.converter(record.created))
         return self.DEFAULT_MSEC_FORMAT % (timestamp, record.msecs)
+
+    def prepare_record(self, record: "LogRecordProtocol"):
+        return {
+            "timestamp": self.format_time(record),
+            "level": record.levelname,
+            "process_id": record.process,
+            "process_name": record.processName,
+            "thread_id": record.thread,
+            "thread_name": record.threadName,
+            "logger_name": record.name,
+            "filename": record.pathname,
+            "function_name": record.funcName,
+            "line_number": record.lineno,
+            "traceback": record.exc_text,
+            "message": record.msg,
+        }

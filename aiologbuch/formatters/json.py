@@ -13,19 +13,5 @@ class JsonFormatter(BaseFormatter):
         return re.sub(r"\\", r"\\\\", text)
 
     def format(self, record: "LogRecordProtocol"):
-        data = {
-            "timestamp": self.format_time(record),
-            "level": record.levelname,
-            "process_id": record.process,
-            "process_name": record.processName,
-            "thread_id": record.thread,
-            "thread_name": record.threadName,
-            "logger_name": record.name,
-            "filename": record.pathname,
-            "function_name": record.funcName,
-            "line_number": record.lineno,
-            "traceback": record.exc_text,
-            "message": record.msg,
-        }
-
+        data = self.prepare_record(record=record)
         return self._ensure_safe(json.dumps(data)).encode() + self.TERMINATOR

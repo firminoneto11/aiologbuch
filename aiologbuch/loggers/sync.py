@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Optional
 
+from aiologbuch.shared.enums import ModeEnum
 from aiologbuch.shared.levels import LogLevel
 from aiologbuch.shared.types import SyncHandlerProtocol
 
@@ -10,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class SyncLogger(BaseLogger[SyncHandlerProtocol]):
-    kind = "sync"
+    mode = ModeEnum.SYNC
 
     def debug(self, msg: "MessageType"):
         if self._filter(level=LogLevel.DEBUG) and self._enabled:
