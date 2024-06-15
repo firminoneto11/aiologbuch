@@ -5,6 +5,7 @@ if TYPE_CHECKING:
 
 
 class LogRecordProtocol(Protocol):
+    name: str
     levelno: int
     created: float
     msecs: float

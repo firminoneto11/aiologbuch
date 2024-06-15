@@ -1,6 +1,7 @@
 from asyncio import Lock, get_running_loop
 from contextlib import asynccontextmanager, contextmanager
 from functools import wraps
+from typing import Awaitable, Callable
 
 from anyio.from_thread import start_blocking_portal
 
@@ -30,6 +31,14 @@ def sync_lock_context(lock: Lock):
     if _thread_has_event_loop() and lock.locked():
         raise WouldDeadlock()
 
+    # TODO: Check the following case:
+    # No event loop and lock is locked. Use a generator to yield control but with the
+    # lock being held by it. The other case would be multi threading environment, but
+    # that'd be safe because the GIL would be released by the waiting thread, leaving
+    # room for the thread that is holding the lock to release it.
+    if (not _thread_has_event_loop()) and (lock.locked()):
+        ...
+
     with start_blocking_portal() as portal:
         portal.call(lock.acquire)
 
@@ -48,11 +57,10 @@ async def async_lock_context(lock: Lock):
         lock.release()
 
 
-# TODO: Improve type hint
-def syncify(function):
+def syncify[R, **Spec](function: Callable[Spec, Awaitable[R]]):
     @wraps(function)
-    def _actual_decorator(*args, **kwargs):
+    def _actual_decorator(*args: Spec.args) -> R:
         with start_blocking_portal() as portal:
-            return portal.call(function, *args, **kwargs)
+            return portal.call(function, *args)
 
     return _actual_decorator
