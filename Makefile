@@ -7,6 +7,7 @@ env:
 	python3.12 -m venv venv
 
 deps:
+	pip install --upgrade pip setuptools
 	poetry install --no-root --all-extras
 
 cov:
@@ -18,6 +19,3 @@ hcov:
 	coverage html
 	python -c "import webbrowser; webbrowser.open_new_tab('$(url)')"
 	python -m http.server -d .coverage/html-report $(cov_port)
-
-build:
-	python3 setup.py bdist_wheel sdist
