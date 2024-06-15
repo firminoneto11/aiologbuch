@@ -23,6 +23,7 @@ class BaseAsyncHandler(BaseHandler):
         try:
             msg = self.format(record)
             await self.write_and_flush(msg)
+        # TODO: Catch custom exceptions
         except:  # noqa
             await self.handle_error(record)
 
@@ -37,6 +38,7 @@ class BaseSyncHandler(BaseHandler):
         try:
             msg = self.format(record)
             self.write_and_flush(msg)
+        # TODO: Catch custom exceptions
         except:  # noqa
             self.handle_error(record)
 

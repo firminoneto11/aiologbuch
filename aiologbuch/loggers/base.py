@@ -5,7 +5,7 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from aiologbuch.shared.types import FilterProtocol, LoggerMode, MessageType
+    from aiologbuch.shared.types import FilterProtocol, IOMode, MessageType
 
 
 @dataclass
@@ -18,7 +18,7 @@ class _StackFrame:
 class BaseLogger[HandlerProtocol]:
     _enabled = True
     _handlers: set[HandlerProtocol]
-    mode: "LoggerMode"
+    mode: "IOMode"
     name: str
 
     def __init__(self, name: str, filter_: "FilterProtocol"):

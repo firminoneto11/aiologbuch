@@ -2,7 +2,7 @@ from .loggers import AsyncLoggerProtocol, SyncLoggerProtocol, BaseLoggerProtocol
 from .general import (  # noqa
     LevelType,
     MessageType,
-    LoggerMode,
+    IOMode,
     StreamBackendType,
     SyncStreamBackendType,
     AsyncStreamBackendType,

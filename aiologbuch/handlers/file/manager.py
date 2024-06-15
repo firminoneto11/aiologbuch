@@ -11,7 +11,7 @@ from .backends import get_stream_backend
 if TYPE_CHECKING:
     from aiologbuch.shared.types import (
         AsyncStreamProtocol,
-        LoggerMode,
+        IOMode,
         SyncStreamProtocol,
     )
 
@@ -32,7 +32,7 @@ class _ResourceManager:
     def lock(self):
         return self._lock
 
-    def ensure_correct_mode(self, resource: "_StreamResource", mode: "LoggerMode"):
+    def ensure_correct_mode(self, resource: "_StreamResource", mode: "IOMode"):
         if resource.mode != mode:
             raise
 
@@ -117,9 +117,9 @@ class _StreamResource:
     _stream: Union["AsyncStreamProtocol", "SyncStreamProtocol"]
 
     reference_count: int
-    mode: "LoggerMode"
+    mode: "IOMode"
 
-    def __init__(self, filename: str, mode: "LoggerMode"):
+    def __init__(self, filename: str, mode: "IOMode"):
         self._filename = filename
 
         if mode == ModeEnum.ASYNC:

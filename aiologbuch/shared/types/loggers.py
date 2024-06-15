@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, Protocol, Self
 
 if TYPE_CHECKING:
     from .filters import FilterProtocol
-    from .general import LoggerMode
+    from .general import IOMode
 
 
 class BaseLoggerProtocol(Protocol):
-    mode: "LoggerMode"
+    mode: "IOMode"
 
     def __call__(self, name: str, filter_: "FilterProtocol") -> Self: ...
 
