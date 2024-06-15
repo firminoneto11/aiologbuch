@@ -9,8 +9,7 @@ from aiologbuch.shared.utils import async_lock_context, sync_lock_context
 
 
 class _AIOProto(Protocol):
-    async def _drain_helper(self):
-        ...
+    async def _drain_helper(self): ...
 
     async def _get_close_waiter(self, transport: StreamWriter):
         while transport.transport._pipe is not None:
@@ -50,8 +49,6 @@ class _ResourceManager:
                 raise RuntimeError("Writer was closed")
             self.stream.write(msg.decode())
             self.stream.flush()
-
-    # NOTE: Is it wise to close the sys.stderr?
 
     async def aclose(self):
         async with async_lock_context(lock=GLOBAL_STDERR_LOCK):
