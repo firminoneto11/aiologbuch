@@ -20,6 +20,7 @@ class JsonFormatter(BaseFormatter):
             "process_name": record.processName,
             "thread_id": record.thread,
             "thread_name": record.threadName,
+            "logger_name": record.name,
             "filename": record.pathname,
             "function_name": record.funcName,
             "line_number": record.lineno,

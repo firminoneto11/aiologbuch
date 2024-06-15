@@ -18,7 +18,7 @@ class LineFormatter(BaseFormatter):
             "filename": record.pathname,
             "function_name": record.funcName,
             "line_number": record.lineno,
-            "message": record.getMessage(),
+            "message": record.msg,
         }
 
         if record.exc_text:
