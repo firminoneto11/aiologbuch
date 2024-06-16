@@ -1,9 +1,9 @@
 from asyncio import Lock
 from threading import Lock as ThreadLock
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, cast
 
 from aiologbuch.shared.conf import STREAM_BACKEND
-from aiologbuch.shared.enums import ModeEnum
+from aiologbuch.shared.enums import IOModeEnum
 from aiologbuch.shared.utils import sync_lock_context
 
 from .backends import get_stream_backend
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from aiologbuch.shared.types import (
         AsyncStreamProtocol,
         IOMode,
+        SyncStreamBackendType,
         SyncStreamProtocol,
     )
 
@@ -39,10 +40,10 @@ class _ResourceManager:
     async def aopen_stream(self, filename: str):
         async with self.lock:
             if (resource := self.resources.get(filename)) is None:
-                resource = _StreamResource(filename=filename, mode=ModeEnum.ASYNC)
+                resource = _StreamResource(filename=filename, mode=IOModeEnum.ASYNC)
                 self.resources[filename] = resource
 
-            self.ensure_correct_mode(resource=resource, mode=ModeEnum.ASYNC)
+            self.ensure_correct_mode(resource=resource, mode=IOModeEnum.ASYNC)
 
             resource.reference_count += 1
 
@@ -51,10 +52,10 @@ class _ResourceManager:
     def open_stream(self, filename: str):
         with sync_lock_context(lock=self.lock):
             if (resource := self.resources.get(filename)) is None:
-                resource = _StreamResource(filename=filename, mode=ModeEnum.SYNC)
+                resource = _StreamResource(filename=filename, mode=IOModeEnum.SYNC)
                 self.resources[filename] = resource
 
-            self.ensure_correct_mode(resource=resource, mode=ModeEnum.SYNC)
+            self.ensure_correct_mode(resource=resource, mode=IOModeEnum.SYNC)
 
             resource.reference_count += 1
 
@@ -65,7 +66,7 @@ class _ResourceManager:
             if (resource := self.resources.get(filename)) is None:
                 raise RuntimeError(f"{filename!r}'s stream was not initialized")
 
-            self.ensure_correct_mode(resource=resource, mode=ModeEnum.ASYNC)
+            self.ensure_correct_mode(resource=resource, mode=IOModeEnum.ASYNC)
 
         await resource.asend(msg=msg)
 
@@ -74,7 +75,7 @@ class _ResourceManager:
             if (resource := self.resources.get(filename)) is None:
                 raise RuntimeError(f"{filename!r}'s stream was not initialized")
 
-            self.ensure_correct_mode(resource=resource, mode=ModeEnum.SYNC)
+            self.ensure_correct_mode(resource=resource, mode=IOModeEnum.SYNC)
 
         resource.send(msg=msg)
 
@@ -85,7 +86,7 @@ class _ResourceManager:
             if (resource := self.resources.get(filename)) is None:
                 return
 
-            self.ensure_correct_mode(resource=resource, mode=ModeEnum.ASYNC)
+            self.ensure_correct_mode(resource=resource, mode=IOModeEnum.ASYNC)
 
             resource.reference_count -= 1
             if resource.reference_count <= 0:
@@ -101,7 +102,7 @@ class _ResourceManager:
             if (resource := self.resources.get(filename)) is None:
                 return
 
-            self.ensure_correct_mode(resource=resource, mode=ModeEnum.SYNC)
+            self.ensure_correct_mode(resource=resource, mode=IOModeEnum.SYNC)
 
             resource.reference_count -= 1
             if resource.reference_count <= 0:
@@ -122,7 +123,7 @@ class _StreamResource:
     def __init__(self, filename: str, mode: "IOMode"):
         self._filename = filename
 
-        if mode == ModeEnum.ASYNC:
+        if mode == IOModeEnum.ASYNC:
             self._lock = Lock()
             self._stream = _AsyncStream(filename=self.filename)
         else:
@@ -145,42 +146,42 @@ class _StreamResource:
         return self._stream
 
     async def aopen(self):
-        if self.mode != ModeEnum.ASYNC:
+        if self.mode != IOModeEnum.ASYNC:
             raise
 
         async with self.lock:
             await self.stream.open()
 
     def open(self):
-        if self.mode != ModeEnum.SYNC:
+        if self.mode != IOModeEnum.SYNC:
             raise
 
         with self.lock:
             self.stream.open()
 
     async def asend(self, msg: bytes):
-        if self.mode != ModeEnum.ASYNC:
+        if self.mode != IOModeEnum.ASYNC:
             raise
 
         async with self.lock:
             await self.stream.send(msg)
 
     def send(self, msg: bytes):
-        if self.mode != ModeEnum.SYNC:
+        if self.mode != IOModeEnum.SYNC:
             raise
 
         with self.lock:
             self.stream.send(msg)
 
     async def aclose(self):
-        if self.mode != ModeEnum.ASYNC:
+        if self.mode != IOModeEnum.ASYNC:
             raise
 
         async with self.lock:
             await self.stream.close()
 
     def close(self):
-        if self.mode != ModeEnum.SYNC:
+        if self.mode != IOModeEnum.SYNC:
             raise
 
         with self.lock:
@@ -189,6 +190,6 @@ class _StreamResource:
 
 _AsyncStream = get_stream_backend(STREAM_BACKEND)
 
-_SyncStream = get_stream_backend(ModeEnum.SYNC)
+_SyncStream = get_stream_backend(cast("SyncStreamBackendType", IOModeEnum.SYNC))
 
 resource_manager = _ResourceManager()
