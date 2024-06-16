@@ -1,6 +1,6 @@
 from asyncio import Lock, get_running_loop
 from contextlib import contextmanager
-from functools import wraps
+from functools import partial, wraps
 from typing import Awaitable, Callable
 
 from anyio.from_thread import start_blocking_portal
@@ -43,8 +43,9 @@ def sync_lock_context(lock: Lock):
 
 def syncify[R, **Spec](function: Callable[Spec, Awaitable[R]]):
     @wraps(function)
-    def _actual_decorator(*args: Spec.args) -> R:
+    def _actual_decorator(*args: Spec.args, **kwargs: Spec.kwargs) -> R:
+        func = partial(function, *args, **kwargs)
         with start_blocking_portal() as portal:
-            return portal.call(function, *args)
+            return portal.call(func)
 
     return _actual_decorator
