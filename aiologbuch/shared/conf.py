@@ -2,19 +2,17 @@ from asyncio import Lock
 from os import getenv
 
 from .types import AsyncStreamBackendType
+from .utils import parse_bool
 
 
-def _parse_bool(value: str):
-    val = value.lower().strip()
-    if val.isdigit():
-        return bool(int(val))
-    return val == "true"
+class _Settings:
+    GLOBAL_STDERR_LOCK = Lock()
+
+    STREAM_BACKEND: AsyncStreamBackendType = (
+        getenv("AIOLOGBUCH_STREAM_BACKEND", "thread").lower().strip()
+    )
+
+    RAISE_EXCEPTIONS = parse_bool(getenv("AIOLOGBUCH_RAISE_EXCEPTIONS", "0"))
 
 
-GLOBAL_STDERR_LOCK = Lock()
-
-RAISE_EXCEPTIONS = _parse_bool(getenv("AIOLOGBUCH_RAISE_EXCEPTIONS", "1"))
-
-STREAM_BACKEND: AsyncStreamBackendType = (
-    getenv("AIOLOGBUCH_STREAM_BACKEND", "thread").lower().strip()
-)
+settings = _Settings()

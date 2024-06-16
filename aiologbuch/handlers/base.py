@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from anyio.to_thread import run_sync
 
-from aiologbuch.shared.conf import GLOBAL_STDERR_LOCK, RAISE_EXCEPTIONS
+from aiologbuch.shared.conf import settings
 from aiologbuch.shared.utils import sync_lock_context
 
 if TYPE_CHECKING:
@@ -28,8 +28,8 @@ class BaseAsyncHandler(BaseHandler):
             await self.handle_error(record)
 
     async def handle_error(self, record: "LogRecordProtocol"):
-        if RAISE_EXCEPTIONS:
-            async with GLOBAL_STDERR_LOCK:
+        if settings.RAISE_EXCEPTIONS:
+            async with settings.GLOBAL_STDERR_LOCK:
                 await run_sync(Handler.handleError, None, record)
 
 
@@ -43,6 +43,6 @@ class BaseSyncHandler(BaseHandler):
             self.handle_error(record)
 
     def handle_error(self, record: "LogRecordProtocol"):
-        if RAISE_EXCEPTIONS:
-            with sync_lock_context(lock=GLOBAL_STDERR_LOCK):
+        if settings.RAISE_EXCEPTIONS:
+            with sync_lock_context(lock=settings.GLOBAL_STDERR_LOCK):
                 Handler.handleError(None, record)

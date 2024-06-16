@@ -2,7 +2,7 @@ from asyncio import Lock
 from threading import Lock as ThreadLock
 from typing import TYPE_CHECKING, Union, cast
 
-from aiologbuch.shared.conf import STREAM_BACKEND
+from aiologbuch.shared.conf import settings
 from aiologbuch.shared.enums import IOModeEnum
 from aiologbuch.shared.utils import sync_lock_context
 
@@ -188,7 +188,7 @@ class _StreamResource:
             self.stream.close()
 
 
-_AsyncStream = get_stream_backend(STREAM_BACKEND)
+_AsyncStream = get_stream_backend(settings.STREAM_BACKEND)
 
 _SyncStream = get_stream_backend(cast("SyncStreamBackendType", IOModeEnum.SYNC))
 

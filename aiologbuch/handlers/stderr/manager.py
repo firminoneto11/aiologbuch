@@ -4,7 +4,7 @@ from asyncio.protocols import Protocol
 from dataclasses import dataclass
 from typing import Optional, TextIO
 
-from aiologbuch.shared.conf import GLOBAL_STDERR_LOCK
+from aiologbuch.shared.conf import settings
 from aiologbuch.shared.utils import sync_lock_context
 
 
@@ -27,7 +27,7 @@ class _ResourceManager:
         return self._closed
 
     async def asend_message(self, msg: bytes):
-        async with GLOBAL_STDERR_LOCK:
+        async with settings.GLOBAL_STDERR_LOCK:
             if self.closed:
                 raise RuntimeError("Writer was closed")
 
@@ -44,14 +44,14 @@ class _ResourceManager:
             await self._writer.drain()
 
     def send_message(self, msg: bytes):
-        with sync_lock_context(lock=GLOBAL_STDERR_LOCK):
+        with sync_lock_context(lock=settings.GLOBAL_STDERR_LOCK):
             if self.closed:
                 raise RuntimeError("Writer was closed")
             self.stream.write(msg.decode())
             self.stream.flush()
 
     async def aclose(self):
-        async with GLOBAL_STDERR_LOCK:
+        async with settings.GLOBAL_STDERR_LOCK:
             if (self.closed) or (not self._writer):
                 return
 
@@ -63,7 +63,7 @@ class _ResourceManager:
             self._writer, self._closed = None, True
 
     def close(self):
-        with sync_lock_context(lock=GLOBAL_STDERR_LOCK):
+        with sync_lock_context(lock=settings.GLOBAL_STDERR_LOCK):
             if self.closed:
                 return
             self.stream.write("Closing stderr...")

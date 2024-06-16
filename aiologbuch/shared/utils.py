@@ -49,3 +49,10 @@ def syncify[R, **Spec](function: Callable[Spec, Awaitable[R]]):
             return portal.call(func)
 
     return _actual_decorator
+
+
+def parse_bool(value: str):
+    val = value.lower().strip()
+    if val.isdigit():
+        return bool(int(val))
+    return val == "true"
