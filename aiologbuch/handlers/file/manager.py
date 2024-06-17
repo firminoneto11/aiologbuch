@@ -120,15 +120,23 @@ class _StreamResource:
     reference_count: int
     mode: "IOMode"
 
+    def _async_stream(self):
+        backend = get_stream_backend(settings.STREAM_BACKEND)
+        return backend(filename=self.filename)
+
+    def _sync_stream(self):
+        backend = get_stream_backend(cast("SyncStreamBackendType", IOModeEnum.SYNC))
+        return backend(filename=self.filename)
+
     def __init__(self, filename: str, mode: "IOMode"):
         self._filename = filename
 
         if mode == IOModeEnum.ASYNC:
             self._lock = Lock()
-            self._stream = _AsyncStream(filename=self.filename)
+            self._stream = self._async_stream()
         else:
             self._lock = ThreadLock()
-            self._stream = _SyncStream(filename=self.filename)
+            self._stream = self._sync_stream()
 
         self.reference_count = 0
         self.mode = mode
@@ -187,9 +195,5 @@ class _StreamResource:
         with self.lock:
             self.stream.close()
 
-
-_AsyncStream = get_stream_backend(settings.STREAM_BACKEND)
-
-_SyncStream = get_stream_backend(cast("SyncStreamBackendType", IOModeEnum.SYNC))
 
 resource_manager = _ResourceManager()

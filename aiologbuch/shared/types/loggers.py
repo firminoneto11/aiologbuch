@@ -2,13 +2,12 @@ from typing import TYPE_CHECKING, Protocol, Self
 
 if TYPE_CHECKING:
     from .filters import FilterProtocol
-    from .general import IOMode
 
 
 class BaseLoggerProtocol(Protocol):
-    mode: "IOMode"
-
     def __call__(self, name: str, filter_: "FilterProtocol") -> Self: ...
+
+    def _add_handler[T](self, handler: T) -> None: ...
 
 
 class AsyncLoggerProtocol(BaseLoggerProtocol):

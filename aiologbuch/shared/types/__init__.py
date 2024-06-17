@@ -3,6 +3,8 @@ from .general import (  # noqa
     LevelType,
     MessageType,
     IOMode,
+    AsyncMode,
+    SyncMode,
     StreamBackendType,
     SyncStreamBackendType,
     AsyncStreamBackendType,

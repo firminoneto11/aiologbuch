@@ -1,6 +1,3 @@
-from enum import StrEnum
-
-
-class IOModeEnum(StrEnum):
+class IOModeEnum:
     ASYNC = "async"
     SYNC = "sync"

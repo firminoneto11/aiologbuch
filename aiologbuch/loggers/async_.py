@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Optional
 
 from anyio import create_task_group
 
-from aiologbuch.shared.enums import IOModeEnum
 from aiologbuch.shared.levels import LogLevel
 from aiologbuch.shared.types import AsyncHandlerProtocol
 
@@ -13,8 +12,6 @@ if TYPE_CHECKING:
 
 
 class AsyncLogger(BaseLogger[AsyncHandlerProtocol]):
-    mode = IOModeEnum.ASYNC
-
     async def debug(self, msg: "MessageType"):
         if self._filter(level=LogLevel.DEBUG) and self._enabled:
             await self._log(LogLevel.DEBUG, msg)
