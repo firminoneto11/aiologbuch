@@ -1,12 +1,20 @@
 from inspect import currentframe, getmodule
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Literal, cast, overload
 
-from .filters import Filter
-from .formatters import JsonFormatter
-from .handlers import AsyncStderrHandler, SyncStderrHandler
+from .formatters import JsonFormatter, LineFormatter
+from .handlers import (  # noqa
+    AsyncFileHandler,
+    AsyncStderrHandler,
+    SyncFileHandler,
+    SyncStderrHandler,
+)
 from .loggers import AsyncLogger, SyncLogger
 from .managers import get_logger_manager
+from .shared.conf import settings
+from .shared.enums import IOModeEnum
+from .shared.filters import Filter
 from .shared.levels import check_level
+from .shared.types import BaseLoggerProtocol
 
 if TYPE_CHECKING:
     from .shared.types import LevelType
@@ -17,8 +25,12 @@ if TYPE_CHECKING:
 # - formatter
 
 
-async_manager = get_logger_manager(AsyncLogger)
-sync_manager = get_logger_manager(SyncLogger)
+async_manager = get_logger_manager(
+    mode=IOModeEnum.ASYNC, logger_class=cast(BaseLoggerProtocol, AsyncLogger)
+)
+sync_manager = get_logger_manager(
+    mode=IOModeEnum.SYNC, logger_class=cast(BaseLoggerProtocol, SyncLogger)
+)
 
 
 @overload
@@ -28,8 +40,7 @@ def get_logger(
     filename: str = "",
     exclusive: bool = False,
     kind: Literal["async"] = "async",
-) -> AsyncLogger:
-    ...
+) -> AsyncLogger: ...
 
 
 @overload
@@ -39,8 +50,7 @@ def get_logger(
     filename: str = "",
     exclusive: bool = False,
     kind: Literal["sync"] = "sync",
-) -> SyncLogger:
-    ...
+) -> SyncLogger: ...
 
 
 def get_logger(
@@ -50,24 +60,6 @@ def get_logger(
     exclusive: bool = False,
     kind: Literal["async", "sync"] = "async",
 ):
-    """
-    This function is used to get a logger instance. If you inform the same name, it
-    will always return the same logger.
-
-    If you don't inform a 'filename', the logger will only log to 'sys.stderr'.
-
-    :param name: The name of the logger.
-    :param level: The level of the logger. Default is INFO.
-    :param filename: The filename to write the logs.
-    :param exclusive: If True, the logger will only log the messages that are \
-        exclusively for the level chosen. Only works with a 'filename' specified.\
-        Default is False.
-    :param kind: Determines the kind of the logger that will be returned, either a \
-        sync or an async logger. The possible values are 'async' and 'sync'. The \
-        default value is 'async'.
-
-    :returns: A logger instance.
-    """
     if not name:
         try:
             if (frame := currentframe().f_back) is None:
@@ -90,14 +82,20 @@ def get_logger(
         else:
             _setup_sync_logger(logger=logger)
 
+    if not settings.is_configured:
+        settings.configure()
+
     return logger
 
 
-def _setup_async_logger(logger: AsyncLogger):
-    stderr_handler = AsyncStderrHandler(formatter=JsonFormatter())
-    logger._add_handler(stderr_handler)
+def _setup_async_logger(logger: BaseLoggerProtocol):
+    stderr_handler1 = AsyncStderrHandler(formatter=JsonFormatter())
+    stderr_handler2 = AsyncStderrHandler(formatter=LineFormatter())
+    logger._add_handler(stderr_handler1)
+    logger._add_handler(stderr_handler2)
 
 
-def _setup_sync_logger(logger: SyncLogger):
+def _setup_sync_logger(logger: BaseLoggerProtocol):
     stderr_handler = SyncStderrHandler(formatter=JsonFormatter())
+    # stderr_handler = SyncStderrHandler(formatter=LineFormatter())
     logger._add_handler(stderr_handler)

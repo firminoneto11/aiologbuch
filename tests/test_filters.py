@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from pytest import mark
 
-from aiologbuch.filters import Filter
+from aiologbuch.shared.filters import Filter
 from aiologbuch.shared.levels import LogLevel
 
 

@@ -15,6 +15,11 @@ class _Settings:
     GLOBAL_STDERR_LOCK: Lock
     STREAM_BACKEND: AsyncStreamBackendType
 
+    @property
+    def is_configured(self):
+        with _settings_lock:
+            return _configured
+
     def configure(self, stream_backend: AsyncStreamBackendType = "thread"):
         global _configured
 
